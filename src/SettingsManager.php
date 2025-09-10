@@ -25,13 +25,16 @@ class SettingsManager implements SettingsManagerInterface
         $this->bag = $bagManager->getBag();
         $this->group = $bagManager->getGroup();
 
+        if ($this->group && !$this->bag) {
+            throw new \Exception('Group must be provided when a bag is set.');
+        }
+
         $this->setCacheTags();
     }
 
     public function setBag(int $bag, ?string $group = null): void
     {
-        $this->bagManager->setBag($bag);
-        $this->bagManager->setGroup($group);
+        $this->bagManager->setBag($bag, $group);
 
         $this->setCacheTags();
     }
@@ -63,7 +66,8 @@ class SettingsManager implements SettingsManagerInterface
         $setting = Setting::firstOrCreate(
             [
                 'key' => $this->key,
-                'bag' => $this->bag
+                'bag' => $this->bag,
+                'group' => $this->group,
             ],
             [
                 'type' => str_replace('double', 'float', gettype($value)),

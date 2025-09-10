@@ -15,9 +15,7 @@ class SettingController extends Controller
      * @param \Illuminate\Http\Request $request
      */
     public function index(Request $request)
-    {
-        return settings()->get('name');
-        
+    {        
         $request->validate([
             'per_page' => 'integer|max:100',
             'keys'     => 'nullable|string',

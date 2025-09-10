@@ -11,9 +11,10 @@ class CreateSettingsTable extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('bag')->nullable()->index();
+            $table->string('group')->nullable()->index();
             $table->string('key')->index();
             $table->enum('type', ['string', 'integer', 'float', 'boolean', 'array']);
-            $table->text('value');
+            $table->text('value')->nullable();
             $table->timestamps();
         });
     }

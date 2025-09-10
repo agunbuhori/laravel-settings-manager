@@ -33,6 +33,11 @@ class Setting extends Model
         static::addGlobalScope('bag', function (Builder $builder) {
             $builder->where('bag', app(SettingsBagManager::class)->getBag());
         });
+        
+        static::addGlobalScope('group', function (Builder $builder) {
+            $builder->where('group', app(SettingsBagManager::class)->getGroup());
+        });
+
     }
 
     /**

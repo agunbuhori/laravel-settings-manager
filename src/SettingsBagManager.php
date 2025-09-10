@@ -18,18 +18,14 @@ class SettingsBagManager
         return $this->bag;
     }
 
-    public function setBag(int $bag)
+    public function setBag(int $bag, ?string $group = null): void
     {
         $this->bag = $bag;
+        $this->group = $group;
     }
 
     public function getGroup()
     {
         return $this->group;
-    }
-
-    public function setGroup(?string $group)
-    {
-        $this->group = $group;
     }
 }
