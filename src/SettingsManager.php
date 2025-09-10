@@ -111,9 +111,7 @@ class SettingsManager implements SettingsManagerInterface
         $this->cacheKeys = collect($keys)->map(fn ($key) => $this->validateKey($key))->toArray();
 
         if ($settings = $this->getManyCache()) {
-            return collect($settings)
-                ->filter(fn ($value) => $value !== null)
-                ->mapWithKeys(fn ($value, $key) => [str_replace('settings:', '', $key) => unserialize($value)])->toArray();
+            return $settings;
         }
 
         $settings = Setting::whereIn('key', $keys)->get();
@@ -123,6 +121,8 @@ class SettingsManager implements SettingsManagerInterface
         foreach ($settings as $setting) {
             $data[$setting->key] = $setting->value;
         }
+
+        $this->setManyCache($data);
 
         return $data;
     }

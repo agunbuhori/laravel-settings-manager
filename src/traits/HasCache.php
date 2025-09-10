@@ -39,13 +39,20 @@ trait HasCache
     {
         if (!config('settings-manager.enable_cache')) return [];
 
-        return $this->cache->get($this->cacheKeys);
+        return collect($this->cache->many($this->cacheKeys))
+                ->filter(fn ($value) => $value !== null)
+                ->mapWithKeys(fn ($value, $key) => [str_replace('settings:', '', $key) => unserialize($value)])
+                ->toArray();
     }
 
     public function setManyCache(array $values): void
     {
         if (!config('settings-manager.enable_cache')) return;
 
+        $this->cache->putMany(collect($values)
+            ->mapWithKeys(fn ($value, $key) => ["settings:{$key}" => serialize($value)])
+            ->toArray(), config('settings-manager.cache_expiration', 86400)
+        );
     }
 
     public function clearCache(): void
