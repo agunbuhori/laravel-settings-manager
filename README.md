@@ -1,6 +1,6 @@
 # Laravel Settings Manager
 
-A simple and flexible **settings manager** for Laravel that allows you to store, retrieve, and manage application or user-specific settings with **bags**, **dot notation**, **type casting**, and **cache support**.
+A powerful and flexible **settings manager** for Laravel that allows you to store, retrieve, and manage application or user-specific settings with **bags**, **groups**, **dot notation**, **type casting**, and **cache support**.
 
 ---
 
@@ -28,13 +28,30 @@ php artisan migrate
 Schema::create('settings', function (Blueprint $table) {
     $table->id();
     $table->unsignedBigInteger('bag')->nullable()->index();
+    $table->string('group')->nullable()->index();
     $table->string('key')->index();
     $table->string('type', 20)->default('string');
     $table->text('value')->nullable();
     $table->timestamps();
 
-    $table->unique(['bag', 'key']);
+    $table->unique(['bag', 'group', 'key']);
 });
+```
+
+### Configuration
+
+You can publish and customize the config:
+
+```bash
+php artisan vendor:publish --tag=settings-manager-config
+```
+
+Example `config/settings-manager.php`:
+
+```php
+return [
+    'enable_cache' => true,
+];
 ```
 
 ---
@@ -44,13 +61,14 @@ Schema::create('settings', function (Blueprint $table) {
 ### 1. Basic Set & Get
 
 ```php
-// Set a string
 settings()->set('site_name', 'My Awesome App');
 
-// Get it back
 $name = settings()->get('site_name'); // "My Awesome App"
+```
 
-// With default fallback
+With default:
+
+```php
 $theme = settings()->get('theme', 'light'); // "light" if not set
 ```
 
@@ -69,10 +87,10 @@ The manager automatically casts values by type:
 | `array`    | array (JSON)        | `['host' => 'smtp.test.com']`       |
 
 ```php
-settings()->set('max_users', 100);        // integer
-settings()->set('pi', 3.14);              // float
-settings()->set('is_active', true);       // boolean
-settings()->set('options', ['a' => 1]);   // array
+settings()->set('max_users', 100);
+settings()->set('pi', 3.14);
+settings()->set('is_active', true);
+settings()->set('options', ['a' => 1]);
 ```
 
 ---
@@ -80,43 +98,77 @@ settings()->set('options', ['a' => 1]);   // array
 ### 3. Dot Notation for Arrays
 
 ```php
-// Save nested array keys
 settings()->set('mail.driver', 'smtp');
 settings()->set('mail.host', 'smtp.mailtrap.io');
 
-// Retrieve
 $driver = settings()->get('mail.driver'); // "smtp"
 ```
 
 ---
 
-### 4. Using Bags (Group Settings)
+### 4. Bags (Tenant / User Isolation)
 
-A **bag** is like a namespace for your settings, useful for multi-tenant or user-based settings.
+A **bag** isolates settings by ID, useful for multi-tenant or user-based configurations.
 
 ```php
-// Tenant-specific settings
+// Tenant 1 settings
 settings()->bag(1)->set('timezone', 'Asia/Jakarta');
-$tz = settings()->bag(1)->get('timezone'); // "Asia/Jakarta"
 
-// General (global) settings
+// Retrieve
+$tz = settings()->bag(1)->get('timezone'); // "Asia/Jakarta"
+```
+
+### 5. Groups (Logical Grouping within a Bag)
+
+Groups allow you to organize settings under a bag.
+
+```php
+// Bag 1, group "notifications"
+settings()->bag(1, 'notifications')->set('email.enabled', true);
+
+// Bag 1, group "appearance"
+settings()->bag(1, 'appearance')->set('theme', 'dark');
+
+// Retrieve
+$enabled = settings()->bag(1, 'notifications')->get('email.enabled'); // true
+```
+
+> ⚠️ Groups require a bag. If you set a group without a bag, an exception will be thrown.
+
+---
+
+### 6. General (Global Settings)
+
+```php
 settings()->general()->set('app.locale', 'en');
+
+$locale = settings()->general()->get('app.locale');
 ```
 
 ---
 
-### 5. Caching
+### 7. Caching
 
-- Settings are cached automatically for **1 day**.
-- Bags use **tagged cache** for isolation per tenant/user.
+- Tagged cache is automatically applied with tags:  
+  `['settings-manager', {bag}, {group}]`
+- Each value is cached for **1 day (86400 seconds)**.  
+- Disable caching via config:
+
+```php
+'settings-manager.enable_cache' => false,
+```
+
+#### Clear cache manually
+
+```php
+settings()->clearCache();
+```
 
 ---
 
 ## 🔌 REST API Endpoints
 
-This package ships with `SettingController` and ready-to-use routes.
-
-### Routes
+This package includes a controller with ready-to-use routes.
 
 ```php
 GET    /settings            // List settings (?keys=site_name,theme&per_page=20)
@@ -126,21 +178,7 @@ PUT    /settings/{key}      // Update setting
 PATCH  /settings/{key}      // Update setting
 ```
 
-### Examples
-
-#### List settings
-
-```bash
-curl http://your-app.test/settings?keys=site_name,theme&per_page=20
-```
-
-#### Get single setting
-
-```bash
-curl http://your-app.test/settings/site_name
-```
-
-#### Update setting
+Example:
 
 ```bash
 curl -X POST http://your-app.test/settings/site_name \
@@ -150,24 +188,14 @@ curl -X POST http://your-app.test/settings/site_name \
 
 ---
 
-## 📚 Example: Controller Usage
+## 📚 Example: Multi-Tenant Usage
 
 ```php
-use App\Http\Controllers\Controller;
+// Store theme per tenant
+settings()->bag(auth()->user()->tenant_id, 'appearance')->set('theme', 'dark');
 
-class ProfileController extends Controller
-{
-    public function update()
-    {
-        // Save user preference
-        settings()->bag(auth()->id())->set('profile.color', 'blue');
-
-        // Later...
-        $color = settings()->bag(auth()->id())->get('profile.color');
-
-        return response()->json(['color' => $color]);
-    }
-}
+// Later retrieve
+$theme = settings()->bag(auth()->user()->tenant_id, 'appearance')->get('theme');
 ```
 
 ---
@@ -175,19 +203,18 @@ class ProfileController extends Controller
 ## ✅ Features
 
 ```txt
-- Simple API for managing settings
+- Store and retrieve settings easily
 - Supports multiple data types (string, int, float, bool, array)
 - Dot notation for nested arrays
-- Bag support (multi-tenant / user-specific)
-- Cached for performance
+- Bags for tenant/user-specific isolation
+- Groups for logical categorization within a bag
+- Configurable caching (with tags per bag+group)
 - REST API endpoints included
-- Helper function `settings()` globally available
+- Global `settings()` helper available
 ```
 
 ---
 
 ## 📝 License
 
-```txt
 This package is open-source software licensed under the MIT license.
-```
