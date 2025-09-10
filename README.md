@@ -41,7 +41,7 @@ Schema::create('settings', function (Blueprint $table) {
 You can publish and customize the config:
 
 ```bash
-php artisan vendor:publish --tag=settings-manager-config
+php artisan vendor:publish --tag=settings-manager
 ```
 
 Example `config/settings-manager.php`:

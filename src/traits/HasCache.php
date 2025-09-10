@@ -20,7 +20,7 @@ trait HasCache
     {
         if (!config('settings-manager.enable_cache') || $value === null) return;
 
-        $this->cache->set($this->cacheKey, $value, 86400);
+        $this->cache->set($this->cacheKey, $value, config('settings-manager.cache_expiration', 86400));
     }
 
     public function getCache(): mixed

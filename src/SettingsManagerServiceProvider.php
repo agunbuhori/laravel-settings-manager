@@ -21,7 +21,7 @@ class SettingsManagerServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/routes/api.php');
 
         $this->publishes([
-            __DIR__ . './config/settings-manager.php' => config_path('settings-manager.php'),
+            __DIR__ . '/config/settings-manager.php' => config_path('settings-manager.php'),
         ], 'settings-manager');
     }
 }
