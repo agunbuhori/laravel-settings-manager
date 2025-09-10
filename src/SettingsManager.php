@@ -57,6 +57,8 @@ class SettingsManager implements SettingsManagerInterface
             return null;
         }
 
+        $initialValue = $value;
+
         $setting = Setting::firstOrCreate(
             [
                 'key' => $this->key,
@@ -75,7 +77,7 @@ class SettingsManager implements SettingsManagerInterface
 
         $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
 
-        $this->setCache($value);
+        $this->setCache($initialValue);
     
         return $value;
     }
