@@ -1,6 +1,6 @@
 # Laravel Settings Manager
 
-A simple and flexible **settings manager** for Laravel that allows you to store, retrieve, and manage application or user-specific settings with **bags**, **dot notation**, and **cache support**.
+A simple and flexible **settings manager** for Laravel that allows you to store, retrieve, and manage application or user-specific settings with **bags**, **dot notation**, **type casting**, and **cache support**.
 
 ---
 
@@ -16,12 +16,26 @@ composer require agunbuhori/settings-manager
 
 ## ⚙️ Setup
 
-The package auto-registers a singleton binding of `SettingsManagerInterface`.
+Run the migration to create the `settings` table:
 
-You can access settings via:
+```bash
+php artisan migrate
+```
 
-- The global `settings()` helper
-- Dependency injection of `SettingsManagerInterface`
+### Example Migration
+
+```php
+Schema::create('settings', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('bag')->nullable()->index();
+    $table->string('key')->index();
+    $table->string('type', 20)->default('string');
+    $table->text('value')->nullable();
+    $table->timestamps();
+
+    $table->unique(['bag', 'key']);
+});
+```
 
 ---
 
@@ -30,64 +44,83 @@ You can access settings via:
 ### 1. Basic Set & Get
 
 ```php
-// Set a value
+// Set a string
 settings()->set('site_name', 'My Awesome App');
 
-// Get a value
+// Get it back
 $name = settings()->get('site_name'); // "My Awesome App"
 
 // With default fallback
-$theme = settings()->get('theme', 'light'); // returns "light" if not set
+$theme = settings()->get('theme', 'light'); // "light" if not set
 ```
 
 ---
 
-### 2. Using Dot Notation for Arrays
+### 2. Supported Types
+
+The manager automatically casts values by type:
+
+| PHP Type   | Stored as DB `type` | Example Value                       |
+|------------|---------------------|-------------------------------------|
+| `string`   | string              | `"Hello World"`                     |
+| `integer`  | integer             | `42`                                |
+| `float`    | float               | `3.14`                              |
+| `boolean`  | boolean             | `true / false`                      |
+| `array`    | array (JSON)        | `['host' => 'smtp.test.com']`       |
 
 ```php
-// Save nested value
+settings()->set('max_users', 100);        // integer
+settings()->set('pi', 3.14);              // float
+settings()->set('is_active', true);       // boolean
+settings()->set('options', ['a' => 1]);   // array
+```
+
+---
+
+### 3. Dot Notation for Arrays
+
+```php
+// Save nested array keys
 settings()->set('mail.driver', 'smtp');
 settings()->set('mail.host', 'smtp.mailtrap.io');
 
-// Retrieve nested value
+// Retrieve
 $driver = settings()->get('mail.driver'); // "smtp"
 ```
 
 ---
 
-### 3. Using Bags (Group Settings)
+### 4. Using Bags (Group Settings)
 
 A **bag** is like a namespace for your settings, useful for multi-tenant or user-based settings.
 
 ```php
-// Set bag to 1 (e.g., Tenant ID = 1)
+// Tenant-specific settings
 settings()->bag(1)->set('timezone', 'Asia/Jakarta');
-
-// Get from bag
 $tz = settings()->bag(1)->get('timezone'); // "Asia/Jakarta"
 
-// General settings (no bag)
+// General (global) settings
 settings()->general()->set('app.locale', 'en');
 ```
 
 ---
 
-### 4. Caching
+### 5. Caching
 
-- Settings are automatically cached for **1 day**.
-- Bags use **tagged cache** to keep values isolated per bag.
+- Settings are cached automatically for **1 day**.
+- Bags use **tagged cache** for isolation per tenant/user.
 
 ---
 
 ## 🔌 REST API Endpoints
 
-This package comes with a controller (`SettingController`) and routes.
+This package ships with `SettingController` and ready-to-use routes.
 
 ### Routes
 
 ```php
-GET    /settings            // List settings (with optional ?keys=key1,key2&per_page=20)
-GET    /settings/{key}      // Show single setting
+GET    /settings            // List settings (?keys=site_name,theme&per_page=20)
+GET    /settings/{key}      // Show a single setting
 POST   /settings/{key}      // Update setting
 PUT    /settings/{key}      // Update setting
 PATCH  /settings/{key}      // Update setting
@@ -98,7 +131,7 @@ PATCH  /settings/{key}      // Update setting
 #### List settings
 
 ```bash
-curl http://your-app.test/settings?per_page=20&keys=site_name,theme
+curl http://your-app.test/settings?keys=site_name,theme&per_page=20
 ```
 
 #### Get single setting
@@ -126,10 +159,10 @@ class ProfileController extends Controller
 {
     public function update()
     {
-        // Save user-specific preference
+        // Save user preference
         settings()->bag(auth()->id())->set('profile.color', 'blue');
 
-        // Retrieve later
+        // Later...
         $color = settings()->bag(auth()->id())->get('profile.color');
 
         return response()->json(['color' => $color]);
@@ -142,12 +175,13 @@ class ProfileController extends Controller
 ## ✅ Features
 
 ```txt
-- Simple API for managing application/user settings
-- Dot notation for nested array values
-- Bag support (multi-tenant / user-specific settings)
+- Simple API for managing settings
+- Supports multiple data types (string, int, float, bool, array)
+- Dot notation for nested arrays
+- Bag support (multi-tenant / user-specific)
 - Cached for performance
 - REST API endpoints included
-- Helper function `settings()` available globally
+- Helper function `settings()` globally available
 ```
 
 ---
