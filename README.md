@@ -30,11 +30,9 @@ Schema::create('settings', function (Blueprint $table) {
     $table->unsignedBigInteger('bag')->nullable()->index();
     $table->string('group')->nullable()->index();
     $table->string('key')->index();
-    $table->string('type', 20)->default('string');
+    $table->enum('type', ['string', 'integer', 'float', 'boolean', 'array']);
     $table->text('value')->nullable();
     $table->timestamps();
-
-    $table->unique(['bag', 'group', 'key']);
 });
 ```
 
