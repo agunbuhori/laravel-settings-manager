@@ -66,16 +66,12 @@ class SettingsManager implements SettingsManagerInterface
             ]
         );
 
-        switch (gettype($value)) {
-            case 'array':
-                $data = $setting->value ?? [];
-                $newSetting = Arr::set($data, $this->arrayKey, $value);
-                $setting->update(['value' => $newSetting, 'type' => 'array']);
-                break;
-            default:
-                $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
-                break;
-        }
+        if (is_array($setting->value)) {
+            $data = $setting->value;
+            $value = Arr::set($data, $this->arrayKey, $value);
+        } 
+
+        $setting->update(['value' => $value, 'type' => gettype($value)]);
 
         $this->setCache($value);
     

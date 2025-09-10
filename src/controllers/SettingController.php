@@ -66,6 +66,6 @@ class SettingController extends Controller
 
         settings()->set($key, $request->value);
 
-        return response()->json(['message' => 'Setting updated successfully']);
+        return response()->json(['message' => 'Setting updated successfully', 'data' => settings()->get($key)]);
     }
 }
