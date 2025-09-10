@@ -133,6 +133,29 @@ settings()->general()->get('timezone'); // UTC
 
 ---
 
+## Bags and Groups
+
+In this settings manager, **bags** are used to define the main scope of your settings.  
+You can think of a bag as a container for a specific context, such as an office, a user, or a project.  
+
+**Groups** are optional sub-scopes inside a bag that help organize settings further, for example `profile`, `preferences`, or `billing`.
+
+### Examples
+
+```php
+// Bag as an office (office ID = 10)
+settings()->bag(10)->set('timezone', 'Asia/Jakarta');
+$tz = settings()->bag(10)->get('timezone'); // "Asia/Jakarta"
+
+// Bag as a user (user ID = 50) with a group "profile"
+settings()->bag(50, 'profile')->set('language', 'id');
+$lang = settings()->bag(50, 'profile')->get('language'); // "id"
+
+// Same user bag with another group "preferences"
+settings()->bag(50, 'preferences')->set('theme', 'dark');
+$theme = settings()->bag(50, 'preferences')->get('theme'); // "dark"
+```
+
 ## 🌐 API Endpoints
 
 If `enable_api` is set to `true`, the following routes are auto-loaded:
