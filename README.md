@@ -133,14 +133,6 @@ settings()->general()->get('timezone'); // UTC
 
 ---
 
-### 8. Get many settings at once
-
-```php
-settings()->get(['locale', 'timezone']); // ['locale' => 'id', 'timezone' => 'Asia/Jakarta']
-```
-
----
-
 ## 🌐 API Endpoints
 
 If `enable_api` is set to `true`, the following routes are auto-loaded:
