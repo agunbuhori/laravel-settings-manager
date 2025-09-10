@@ -44,4 +44,11 @@ interface SettingsManagerInterface
      * @return mixed
      */
     public function get(string $key, mixed $default = null): mixed;
+
+    /**
+     * Clear cache
+     * 
+     * @return void
+     */
+    public function clearCache(): void;
 }

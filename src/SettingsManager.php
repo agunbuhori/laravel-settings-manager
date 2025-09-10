@@ -7,6 +7,8 @@ use Illuminate\Support\Arr;
 use Agunbuhori\SettingsManager\Models\Setting;
 use Agunbuhori\SettingsManager\SettingsBagManager;
 use Agunbuhori\SettingsManager\Interfaces\SettingsManagerInterface;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Cache\TaggedCache;
 
 class SettingsManager implements SettingsManagerInterface
 {
@@ -14,10 +16,17 @@ class SettingsManager implements SettingsManagerInterface
     private string $key = '';
     private string $arrayKey = '';
     private string $cacheKey = '';
+    private TaggedCache $cache;
+
+    private static const CACHE_KEY = 'settings-manager';
 
     public function __construct(private SettingsBagManager $bagManager)
     {
         $this->bag = $bagManager->getBag();
+
+        $this->cache = $this->bag 
+            ? Cache::tags([self::CACHE_KEY, $this->bag]) 
+            : Cache::tags(self::CACHE_KEY);
     }
 
     public function setBag(int $bag): void
@@ -28,12 +37,16 @@ class SettingsManager implements SettingsManagerInterface
     public function bag(int $bag): self
     {
         $this->bag = $bag;
+        $this->cache = Cache::tags([self::CACHE_KEY, $bag]);
+
         return $this;
     }
 
     public function general(): self
     {
         $this->bag = null;
+        $this->cache = Cache::tags(self::CACHE_KEY);
+
         return $this;
     }
 
@@ -113,19 +126,20 @@ class SettingsManager implements SettingsManagerInterface
     {
         if (!config('settings-manager.enable_cache') || $value === null) return;
 
-        if ($this->bag) {
-            cache()->tags($this->bag)->set($this->cacheKey, $value, now()->addDay());
-        } else {
-            cache()->set($this->cacheKey, $value, now()->addDay());
-        }
+        $this->cache->set($this->cacheKey, $value, 86400);
     }
 
     private function getCache(): mixed
     {
-        $cache = $this->bag ? cache()->tags($this->bag) : cache();
+        if (!config('settings-manager.enable_cache')) return null;
 
-        return config('settings-manager.enable_cache') && $cache->has($this->cacheKey) 
-            ? $cache->get($this->cacheKey) 
-            : null;
+        return $this->cache->get($this->cacheKey);
+    }
+
+    public function clearCache(): void
+    {
+        if (!config('settings-manager.enable_cache')) return;
+
+        $this->cache->flush();
     }
 }
