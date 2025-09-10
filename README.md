@@ -1,208 +1,158 @@
-# Settings Manager for Laravel — GROUPS Explained (Full README)
+# Settings Manager for Laravel
 
-This README focuses on **how `bag` and `group` work** and gives clear, copy/paste examples so you can use groups correctly.
+A simple yet powerful Laravel package to manage application settings with support for:
 
-> **Short summary**
->
-> - **Bag** = scope (tenant, user, organization).  
-> - **Group** = sub-scope inside a bag to logically separate settings (e.g. `profile`, `preferences`, `billing`).  
-> - Groups are always used *together with a bag* in the package controller (API). Programmatically you can call `settings()->bag($bag, $group)`.
-
----
-
-## ✅ Key concepts
-
-- **Bag** (integer or `null`): primary scope. Examples: tenant id, user id, account id.  
-- **Group** (string or `null`): secondary scope inside a bag. Examples: `profile`, `preferences`, `payment`.  
-- **Key**: the setting name stored in DB (`key` column). Can use dot notation for nested values (`preferences.color` -> stores as `key = "preferences"` and nested array `["color" => "..."]`).  
-- **Storage uniqueness**: rows are unique per `(bag, group, key)` (recommended migration uses a unique index on these columns).
+- ✅ Multiple bags (per tenant/user/project scope)  
+- ✅ Groups (sub-scope inside a bag, e.g. `profile`, `preferences`, `billing`)  
+- ✅ Dot-notation keys for nested array values  
+- ✅ Automatic type casting (`string`, `integer`, `float`, `boolean`, `array`)  
+- ✅ Cache support for fast retrieval  
+- ✅ REST API endpoints out of the box  
 
 ---
 
-## Migration (recommended)
+## Installation
 
-Make sure your `settings` table includes `bag` and `group`:
+```bash
+composer require agunbuhori/settings-manager
+```
 
-```php
-Schema::create('settings', function (Blueprint $table) {
-    $table->id();
-    $table->unsignedBigInteger('bag')->nullable()->index();
-    $table->string('group')->nullable()->index();
-    $table->string('key')->index();
-    $table->string('type', 20)->default('string');
-    $table->text('value')->nullable();
-    $table->timestamps();
+Publish config and migration:
 
-    $table->unique(['bag', 'group', 'key']);
-});
+```bash
+php artisan vendor:publish --tag=settings-manager
+php artisan migrate
 ```
 
 ---
 
-## Programmatic examples (clear)
+## Usage
 
-### 1) Save a group-scoped setting (per-user profile)
+### 1. Basic usage (general bag)
 
 ```php
-// Store 'language' under bag = 123 and group = "profile"
-settings()->bag(123, 'profile')->set('language', 'id');
+// Save a setting
+settings()->set('site_name', 'My App');
 
-// Retrieve the same:
-$lang = settings()->bag(123, 'profile')->get('language'); // 'id'
+// Retrieve it
+$name = settings()->get('site_name'); // "My App"
 ```
 
-### 2) Multiple groups inside the same bag
+### 2. Using bags (per tenant/user)
 
 ```php
-// Bag 123 has two groups: 'profile' and 'preferences'
-settings()->bag(123, 'profile')->set('language', 'id');
-settings()->bag(123, 'preferences')->set('notifications.email', true);
+// Save a setting for bag 10 (e.g. tenant_id = 10)
+settings()->bag(10)->set('timezone', 'Asia/Jakarta');
 
-// They do NOT conflict:
-settings()->bag(123, 'profile')->get('language');           // 'id'
-settings()->bag(123, 'preferences')->get('notifications.email'); // true
+// Retrieve it
+$tz = settings()->bag(10)->get('timezone'); // "Asia/Jakarta"
 ```
 
-### 3) Dot notation inside groups
+### 3. Using groups (sub-scope inside a bag)
 
 ```php
-// This saves key = "preferences" (DB), with nested value: { "theme": { "color": "blue" } }
-settings()->bag(123, 'preferences')->set('preferences.theme.color', 'blue');
+// Store profile settings for user 50
+settings()->bag(50, 'profile')->set('language', 'id');
 
-// Read nested value:
-$color = settings()->bag(123, 'preferences')->get('preferences.theme.color'); // 'blue'
+// Store preferences for the same user
+settings()->bag(50, 'preferences')->set('theme', 'dark');
+
+// Read them back
+$lang  = settings()->bag(50, 'profile')->get('language');    // "id"
+$theme = settings()->bag(50, 'preferences')->get('theme');   // "dark"
 ```
 
-### 4) Deleting a group setting
+### 4. Dot-notation keys (nested values)
 
 ```php
-// Delete the 'language' setting inside bag=123, group='profile'
-settings()->bag(123, 'profile')->set('language', null);
+// Save nested data
+settings()->set('notifications.email.enabled', true);
+
+// Get nested data
+$enabled = settings()->get('notifications.email.enabled'); // true
 ```
 
-### 5) getMany with bag/group
+### 5. Bulk retrieval
 
 ```php
-// Save some values
-settings()->bag(123, 'profile')->set('language', 'id');
-settings()->bag(123, 'profile')->set('timezone', 'Asia/Jakarta');
+// Save
+settings()->set('app.name', 'MyApp');
+settings()->set('app.version', '1.0');
 
-// Bulk fetch (still needs same bag/group in context)
-$values = settings()->bag(123, 'profile')->getMany(['language', 'timezone']);
-// $values -> ['language' => 'id', 'timezone' => 'Asia/Jakarta']
+// Fetch many at once
+$values = settings()->getMany(['app.name', 'app.version']);
+// [
+//     "app.name"    => "MyApp",
+//     "app.version" => "1.0"
+// ]
+```
+
+### 6. Deleting a setting
+
+```php
+// This removes the record
+settings()->set('app.name', null);
 ```
 
 ---
 
-## REST API usage (group via query params)
+## REST API Endpoints
 
-Your package controller looks for `bag` (and `group`) on the request. **Important** — the controller sets bag only if `bag` is present in the request. If you want to use `group`, pass both `bag` and `group`.
+The package auto-registers routes:
+
+```
+GET    /api/settings           → list settings
+GET    /api/settings/{key}     → get a single setting
+POST   /api/settings/{key}     → create/update a setting
+PUT    /api/settings/{key}     → update a setting
+PATCH  /api/settings/{key}     → update a setting
+DELETE /api/settings/{key}     → delete a setting
+```
 
 ### Examples
 
-#### List settings (filtered by keys, bag & group)
+#### Create/Update
 
 ```
-GET /api/settings?per_page=20&keys=language,timezone&bag=123&group=profile
+POST /api/settings/site_name
+{ "value": "My App" }
 ```
 
-- The controller will set the request context to `bag = 123` and `group = profile`.
-- `Setting::` queries will be scoped to that bag/group (via the package's bag manager/global scope).
-
-#### Get single setting
+#### Read
 
 ```
-GET /api/settings/language?bag=123&group=profile
+GET /api/settings/site_name
 ```
 
-Response:
+#### With bag & group
 
-```json
+```
+POST /api/settings/language?bag=50&group=profile
 { "value": "id" }
 ```
 
-#### Update a setting
-
-```
-POST /api/settings/language?bag=123&group=profile
-Content-Type: application/json
-{ "value": "en" }
-```
-
-Response:
-
-```json
-{ "message": "Setting updated successfully", "data": "en" }
-```
-
-#### Delete a setting
-
-```
-DELETE /api/settings/language?bag=123&group=profile
-```
-
-Response:
-
-```json
-{ "message": "Setting deleted successfully", "data": null }
-```
-
 ---
 
-## Important details & gotchas
+## Config Options
 
-- **Group is meaningful only with a bag in the controller**: the controller constructor sets bag & group only when the `bag` parameter exists. If you call the API with `?group=profile` but no `bag`, the controller **won't** set the group — so include `bag` in the query.  
-- **Programmatic usage is fully flexible**: `settings()->bag($bag, $group)` works even if called from code (not via HTTP).  
-- **Dot-notation behavior**: `settings()->set('preferences.color', 'blue')` will actually store a DB row with `key = 'preferences'` and a nested `value` containing `['color' => 'blue']`. This is true inside groups as well.  
-- **Unique index**: the recommended migration has `unique(['bag','group','key'])` to avoid duplicate rows.  
-- **Cache isolation**: the package uses cache tags (per bag) and keys that include bag/group so settings from different bags/groups do not conflict.  
-- **Deleting a setting**: calling `set($key, null)` removes the DB row and clears its cache.
-
----
-
-## Troubleshooting
-
-- **Group not applied in API**: ensure you pass `bag` in query params (example: `?bag=123&group=profile`). The controller only sets group if `bag` is present.  
-- **I see wrong values**: confirm you're using the same `(bag, group, key)` when writing and reading.  
-- **Arrays not merging**: when using dot notation, ensure the DB value is stored as an array type (`type = 'array'`), otherwise merging could fail. The package normally handles this automatically, but if you manually edited DB rows, check `type` and `value` JSON.  
-- **Cache issues**: clear cache or ensure `enable_cache` is true/false in `config/settings-manager.php` as you expect.
-
----
-
-## Quick checklist
-
-- ✅ Add `group` column in migration  
-- ✅ Use `settings()->bag($bag, $group)` in code to set/read group-scoped values  
-- ✅ For API calls include `?bag=...&group=...` so controller sets both correctly  
-- ✅ Use dot notation for nested values: `key = "preferences"` + nested JSON for `"value"`  
-- ✅ `set($key, null)` deletes the row and clears cache
-
----
-
-## Example: Real-world scenario
-
-You run a multi-tenant app. Tenants have user preferences and billing settings:
+In `config/settings-manager.php`:
 
 ```php
-// Tenant 50: user profile settings
-settings()->bag(50, 'profile')->set('language', 'id');
-settings()->bag(50, 'profile')->set('theme.color', 'blue');
-
-// Tenant 50: billing settings (same bag, different group)
-settings()->bag(50, 'billing')->set('currency', 'USD');
-settings()->bag(50, 'billing')->set('tax.rate', 10);
-
-// Reading:
-settings()->bag(50, 'profile')->get('language');       // 'id'
-settings()->bag(50, 'billing')->get('currency');       // 'USD'
-settings()->bag(50, 'profile')->get('theme.color');    // 'blue'
+return [
+    'enable_cache'      => true,
+    'cache_expiration'  => 86400, // 1 day
+    'enable_api'        => true,
+];
 ```
 
 ---
 
-If you'd like, I can:
-- Add a short **code snippet** for the middleware (how to accept `bag` and `group` from headers or other sources), or  
-- Provide a **unit-test example** showing saving/reading across bags and groups, or  
-- Generate a nearly complete `README.md` (one copy box) including all of the above plus migration + example controller usage.
+## Summary
 
-Which one should I produce next?
+- Use `settings()->set($key, $value)` and `settings()->get($key)` for general/global settings.  
+- Use `settings()->bag($bag)->set($key, $value)` for tenant/user-specific settings.  
+- Use `settings()->bag($bag, $group)->set($key, $value)` for more granular grouping.  
+- Dot notation allows nested array values.  
+- API endpoints are available if you enable them in the config.  
+
+---
