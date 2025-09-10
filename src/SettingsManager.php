@@ -70,7 +70,7 @@ class SettingsManager implements SettingsManagerInterface
                 'group' => $this->group,
             ],
             [
-                'type' => str_replace('double', 'float', gettype($value)),
+                'type' => $this->validatedType($value),
                 'value' => "[]"
             ]
         );
@@ -82,7 +82,7 @@ class SettingsManager implements SettingsManagerInterface
                 $setting->update(['value' => $newSetting, 'type' => 'array']);
                 break;
             default:
-                $setting->update(['value' => $value, 'type' => gettype($value)]);
+                $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
                 break;
         }
 
@@ -128,5 +128,10 @@ class SettingsManager implements SettingsManagerInterface
         }
 
         $this->cacheKey = "settings:{$this->bag}:{$key}";
+    }
+
+    private function validatedType(mixed $value): string
+    {
+        return str_replace('double', 'float', gettype($value));
     }
 }
