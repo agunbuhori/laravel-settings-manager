@@ -1,158 +1,216 @@
-# Settings Manager for Laravel
+# 📦 Settings Manager for Laravel
 
-A simple yet powerful Laravel package to manage application settings with support for:
+A simple and flexible **settings manager package** for Laravel.  
+It helps you store, retrieve, and manage application settings in the database — with support for:
 
-- ✅ Multiple bags (per tenant/user/project scope)  
-- ✅ Groups (sub-scope inside a bag, e.g. `profile`, `preferences`, `billing`)  
-- ✅ Dot-notation keys for nested array values  
-- ✅ Automatic type casting (`string`, `integer`, `float`, `boolean`, `array`)  
-- ✅ Cache support for fast retrieval  
-- ✅ REST API endpoints out of the box  
+- ✅ Key/value settings  
+- ✅ Typed values (`string`, `integer`, `float`, `boolean`, `array`)  
+- ✅ Dot notation for nested arrays  
+- ✅ Cache support for performance  
+- ✅ Bag & group support (multi-tenant, multi-context)  
+- ✅ Bulk get (`getMany()`)  
+- ✅ REST API endpoints for settings management  
 
 ---
 
-## Installation
+## 🚀 Installation
 
-```bash
+Require the package via Composer:
+
+```
 composer require agunbuhori/settings-manager
 ```
 
-Publish config and migration:
+Publish the config file:
 
-```bash
+```
 php artisan vendor:publish --tag=settings-manager
+```
+
+Run the migrations:
+
+```
 php artisan migrate
 ```
 
 ---
 
-## Usage
+## ⚙️ Configuration
 
-### 1. Basic usage (general bag)
-
-```php
-// Save a setting
-settings()->set('site_name', 'My App');
-
-// Retrieve it
-$name = settings()->get('site_name'); // "My App"
-```
-
-### 2. Using bags (per tenant/user)
-
-```php
-// Save a setting for bag 10 (e.g. tenant_id = 10)
-settings()->bag(10)->set('timezone', 'Asia/Jakarta');
-
-// Retrieve it
-$tz = settings()->bag(10)->get('timezone'); // "Asia/Jakarta"
-```
-
-### 3. Using groups (sub-scope inside a bag)
-
-```php
-// Store profile settings for user 50
-settings()->bag(50, 'profile')->set('language', 'id');
-
-// Store preferences for the same user
-settings()->bag(50, 'preferences')->set('theme', 'dark');
-
-// Read them back
-$lang  = settings()->bag(50, 'profile')->get('language');    // "id"
-$theme = settings()->bag(50, 'preferences')->get('theme');   // "dark"
-```
-
-### 4. Dot-notation keys (nested values)
-
-```php
-// Save nested data
-settings()->set('notifications.email.enabled', true);
-
-// Get nested data
-$enabled = settings()->get('notifications.email.enabled'); // true
-```
-
-### 5. Bulk retrieval
-
-```php
-// Save
-settings()->set('app.name', 'MyApp');
-settings()->set('app.version', '1.0');
-
-// Fetch many at once
-$values = settings()->getMany(['app.name', 'app.version']);
-// [
-//     "app.name"    => "MyApp",
-//     "app.version" => "1.0"
-// ]
-```
-
-### 6. Deleting a setting
-
-```php
-// This removes the record
-settings()->set('app.name', null);
-```
-
----
-
-## REST API Endpoints
-
-The package auto-registers routes:
-
-```
-GET    /api/settings           → list settings
-GET    /api/settings/{key}     → get a single setting
-POST   /api/settings/{key}     → create/update a setting
-PUT    /api/settings/{key}     → update a setting
-PATCH  /api/settings/{key}     → update a setting
-DELETE /api/settings/{key}     → delete a setting
-```
-
-### Examples
-
-#### Create/Update
-
-```
-POST /api/settings/site_name
-{ "value": "My App" }
-```
-
-#### Read
-
-```
-GET /api/settings/site_name
-```
-
-#### With bag & group
-
-```
-POST /api/settings/language?bag=50&group=profile
-{ "value": "id" }
-```
-
----
-
-## Config Options
-
-In `config/settings-manager.php`:
+File: `config/settings-manager.php`
 
 ```php
 return [
-    'enable_cache'      => true,
-    'cache_expiration'  => 86400, // 1 day
-    'enable_api'        => true,
+    'enable_cache'     => true,
+    'cache_expiration' => 86400, // 1 day in seconds
+    'enable_api'       => true,
 ];
 ```
 
 ---
 
-## Summary
+## 🛠 Usage
 
-- Use `settings()->set($key, $value)` and `settings()->get($key)` for general/global settings.  
-- Use `settings()->bag($bag)->set($key, $value)` for tenant/user-specific settings.  
-- Use `settings()->bag($bag, $group)->set($key, $value)` for more granular grouping.  
-- Dot notation allows nested array values.  
-- API endpoints are available if you enable them in the config.  
+### 1. Basic set & get
+
+```php
+settings()->set('site_name', 'My App');
+$name = settings()->get('site_name'); // "My App"
+```
+
+---
+
+### 2. Arrays & dot notation
+
+```php
+settings()->set('app.theme.color', 'blue');
+settings()->set('app.theme.layout', 'grid');
+
+$color = settings()->get('app.theme.color'); // "blue"
+```
+
+---
+
+### 3. Typed values
+
+```php
+settings()->set('max_users', 100);        // integer
+settings()->set('pi_value', 3.14);        // float
+settings()->set('is_active', true);       // boolean
+settings()->set('allowed_ips', ['1.1.1.1', '8.8.8.8']); // array
+```
+
+---
+
+### 4. Multiple settings at once
+
+```php
+$data = settings()->getMany(['site_name', 'is_active', 'max_users']);
+
+/*
+[
+    "site_name" => "My App",
+    "is_active" => true,
+    "max_users" => 100
+]
+*/
+```
+
+---
+
+### 5. Bag-specific settings (multi-tenant)
+
+```php
+// Bag #1
+settings()->bag(1)->set('currency', 'USD');
+
+// Bag #2
+settings()->bag(2)->set('currency', 'EUR');
+
+// Retrieve per bag
+settings()->bag(1)->get('currency'); // USD
+settings()->bag(2)->get('currency'); // EUR
+```
+
+---
+
+### 6. General settings (no bag)
+
+```php
+settings()->general()->set('timezone', 'UTC');
+settings()->general()->get('timezone'); // UTC
+```
+
+---
+
+## 🌐 API Endpoints
+
+If `enable_api` is set to `true`, the following routes are auto-loaded:
+
+```
+GET     /settings?per_page=10&keys=site_name,is_active
+GET     /settings/{key}
+POST    /settings/{key}   (or PUT/PATCH)
+DELETE  /settings/{key}
+```
+
+### Example: Fetch a setting
+
+```
+GET /settings/site_name
+→ { "value": "My App" }
+```
+
+### Example: Update a setting
+
+```
+POST /settings/site_name
+{
+  "value": "New Name"
+}
+→ { "message": "Setting updated successfully", "data": "New Name" }
+```
+
+### Example: Delete a setting
+
+```
+DELETE /settings/site_name
+→ { "message": "Setting deleted successfully", "data": null }
+```
+
+---
+
+## 🔑 Middleware Support
+
+All API routes are wrapped with `SettingsManagerMiddleware`.  
+This allows you to pass **bag** and **group** via query string:
+
+```
+GET /settings?bag=1&group=users
+```
+
+That way, your API can handle multiple contexts (multi-tenant, multi-organization, etc.).
+
+---
+
+## 🧩 Helper Function
+
+You can call the global helper:
+
+```php
+settings()->set('foo', 'bar');
+$value = settings()->get('foo'); // "bar"
+```
+
+---
+
+## 📂 Project Structure (important files)
+
+```
+app/
+config/
+    settings-manager.php
+routes/
+    api.php   // Settings API routes
+database/
+    migrations/
+        create_settings_table.php
+src/
+    Controllers/SettingController.php
+    Middlewares/SettingsManagerMiddleware.php
+    Models/Setting.php
+    SettingsManager.php
+    SettingsBagManager.php
+```
+
+---
+
+## ✅ Summary
+
+- Store any type of settings (`string`, `int`, `float`, `bool`, `array`)  
+- Use dot notation for arrays (`app.theme.color`)  
+- Switch between **general**, **bag**, and **group** easily  
+- Cache for faster performance  
+- Full REST API included out of the box  
 
 ---
