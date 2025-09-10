@@ -31,13 +31,9 @@ class Setting extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('bag', function (Builder $builder) {
-            $builder->where('bag', app(SettingsBagManager::class)->getBag());
+            $builder->where('bag', app(SettingsBagManager::class)->getBag())
+                    ->where('group', app(SettingsBagManager::class)->getGroup());
         });
-        
-        static::addGlobalScope('group', function (Builder $builder) {
-            $builder->where('group', app(SettingsBagManager::class)->getGroup());
-        });
-
     }
 
     /**
