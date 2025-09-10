@@ -22,13 +22,6 @@ class SettingsManager implements SettingsManagerInterface
 
     public function __construct(private SettingsBagManager $bagManager)
     {
-        $this->bag = $bagManager->getBag();
-        $this->group = $bagManager->getGroup();
-
-        if ($this->group && !$this->bag) {
-            throw new \Exception('Group must be provided when a bag is set.');
-        }
-
         $this->setCacheTags();
     }
 
@@ -41,8 +34,7 @@ class SettingsManager implements SettingsManagerInterface
 
     public function bag(int $bag, ?string $group = null): self
     {
-        $this->bag = $bag;
-        $this->group = $group;
+        $this->bagManager->setBag($bag, $group);
 
         $this->setCacheTags();
 
@@ -51,8 +43,7 @@ class SettingsManager implements SettingsManagerInterface
 
     public function general(): self
     {
-        $this->bag = null;
-        $this->group = null;
+        $this->bagManager->setBag(null, null);
 
         $this->setCacheTags();
 
@@ -66,7 +57,7 @@ class SettingsManager implements SettingsManagerInterface
         $setting = Setting::firstOrCreate(
             [
                 'key' => $this->key,
-                'bag' => $this->bag,
+                'bag' => $this->bagManager->getBag(),
                 'group' => $this->group,
             ],
             [
@@ -127,7 +118,7 @@ class SettingsManager implements SettingsManagerInterface
             $this->arrayKey = str_replace("{$this->key}.", '', $key);
         }
 
-        $this->cacheKey = "settings:{$this->bag}:{$key}";
+        $this->cacheKey = "settings:{$key}";
     }
 
     private function validatedType(mixed $value): string

@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        if ($request->has('bag')) {
+            settings()->setBag((int) $request->bag, $request->group);
+        }
+    }
 
     /**
      * Display a listing of the resource.
@@ -24,8 +30,6 @@ class SettingController extends Controller
         $settings = Setting::when($request->has('keys'), function ($query) use ($request) {
                                 $query->whereIn('key', explode(',', $request->keys));
                             })
-                            ->when($request->has('bag'), fn ($query) => $query->where('bag', $request->bag))
-                            ->when($request->has('group'), fn ($query) => $query->where('group', $request->group))
                             ->cursorPaginate($request->get('per_page', 10));
 
         return response()->json($settings);
@@ -39,10 +43,7 @@ class SettingController extends Controller
      */
     public function show(Request $request, string $key)
     {
-        $setting = Setting::where('key', $key)
-                            ->when($request->has('bag'), fn ($query) => $query->where('bag', $request->bag))
-                            ->when($request->has('group'), fn ($query) => $query->where('group', $request->group))
-                            ->firstOrFail();
+        $setting = Setting::where('key', $key)->firstOrFail();
 
         return response()->json($setting);
     }

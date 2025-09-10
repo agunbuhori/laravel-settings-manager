@@ -18,7 +18,7 @@ class SettingsBagManager
         return $this->bag;
     }
 
-    public function setBag(int $bag, ?string $group = null): void
+    public function setBag(?int $bag = null, ?string $group = null): void
     {
         $this->bag = $bag;
         $this->group = $group;

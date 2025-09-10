@@ -10,7 +10,7 @@ interface SettingsManagerInterface
      * @param int $bag
      * @return self
      */
-    public function setBag(int $bag): void;
+    public function setBag(int $bag, ?string $group): void;
 
     /**
      * Set a bag for the settings
@@ -18,7 +18,7 @@ interface SettingsManagerInterface
      * @param int $bag
      * @return self
      */
-    public function bag(int $bag): self;
+    public function bag(int $bag, ?string $group): self;
 
     /**
      * Get the general bag
