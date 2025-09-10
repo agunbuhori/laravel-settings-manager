@@ -1,0 +1,21 @@
+{
+    "name": "agunbuhori/settings-manager",
+    "description": "Laravel settings manager package",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Agunbuhori\\SettingsManager\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Agunbuhori\\SettingsManager\\SettingsManagerServiceProvider"
+            ]
+        }
+    }
+}
