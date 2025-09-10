@@ -114,11 +114,29 @@ settings()->bag(2)->get('currency'); // EUR
 
 ---
 
-### 6. General settings (no bag)
+### 6. Group settings (multi-tenant)
+
+```php
+// Bag #1
+settings()->bag(1, 'user')->set('currency', 'USD');
+settings()->bag(1, 'store')->set('currency', 'USD');
+```
+
+---
+
+### 7. General settings (no bag)
 
 ```php
 settings()->general()->set('timezone', 'UTC');
 settings()->general()->get('timezone'); // UTC
+```
+
+---
+
+### 8. Get many settings at once
+
+```php
+settings()->get(['locale', 'timezone']); // ['locale' => 'id', 'timezone' => 'Asia/Jakarta']
 ```
 
 ---
