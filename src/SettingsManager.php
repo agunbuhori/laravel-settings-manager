@@ -15,6 +15,7 @@ class SettingsManager implements SettingsManagerInterface
     private string $key = '';
     private string $arrayKey = '';
     private string $cacheKey = '';
+    private array $cacheKeys = [];
     private TaggedCache $cache;
 
     public function __construct(private SettingsBagManager $bagManager)
@@ -105,10 +106,31 @@ class SettingsManager implements SettingsManagerInterface
         return $result;
     }
 
-    private function validateKey(string $key): void
+    public function getMany(array $keys): array
     {
+        $this->cacheKeys = collect($keys)->map(fn ($key) => $this->validateKey($key))->toArray();
+
+        if ($settings = $this->getManyCache()) {
+            return collect($settings)
+                ->filter(fn ($value) => $value !== null)
+                ->mapWithKeys(fn ($value, $key) => [str_replace('settings:', '', $key) => unserialize($value)])->toArray();
+        }
+
+        $settings = Setting::whereIn('key', $keys)->get();
+
+        $data = [];
+
+        foreach ($settings as $setting) {
+            $data[$setting->key] = $setting->value;
+        }
+
+        return $data;
+    }
+
+    private function validateKey(string $key): string
+    { 
         if (!preg_match('/^[a-zA-Z0-9\-\_.]+$/', $key)) {
-            throw new \Exception('Key must contain only letters, numbers, ".", "-" and "_"');
+            throw new \Exception('Key must contain only letters, numbers, ".", "-" and "_".'.' Given key: '.$key);
         }
 
         $this->key = $key;
@@ -119,6 +141,8 @@ class SettingsManager implements SettingsManagerInterface
         }
 
         $this->cacheKey = "settings:{$key}";
+
+        return $this->cacheKey;
     }
 
     private function validatedType(mixed $value): string

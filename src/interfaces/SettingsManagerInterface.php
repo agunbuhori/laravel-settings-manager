@@ -46,6 +46,14 @@ interface SettingsManagerInterface
     public function get(string $key, mixed $default = null): mixed;
 
     /**
+     * Get some settings
+     * 
+     * @param array $keys
+     * @return array<string, mixed>
+     */
+    public function getMany(array $keys): array;
+
+    /**
      * Clear cache
      * 
      * @return void

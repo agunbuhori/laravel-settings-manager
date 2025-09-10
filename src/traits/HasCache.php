@@ -35,6 +35,19 @@ trait HasCache
         return $this->cache->get($this->cacheKey);
     }
 
+    public function getManyCache(): array
+    {
+        if (!config('settings-manager.enable_cache')) return [];
+
+        return $this->cache->get($this->cacheKeys);
+    }
+
+    public function setManyCache(array $values): void
+    {
+        if (!config('settings-manager.enable_cache')) return;
+
+    }
+
     public function clearCache(): void
     {
         if (!config('settings-manager.enable_cache')) return;
