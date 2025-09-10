@@ -88,7 +88,7 @@ class SettingsManager implements SettingsManagerInterface
             return $setting;
         }
 
-        $setting = Setting::where('key', $this->key)->where('bag', $this->bag)->first();
+        $setting = Setting::where('key', $this->key)->first();
 
         if (!$setting) return $default;
 
