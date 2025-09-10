@@ -111,6 +111,8 @@ class SettingsManager implements SettingsManagerInterface
 
     private function setCache(mixed $value): void
     {
+        if (!config('settings-manager.enable_cache') || $value === null) return;
+
         if ($this->bag) {
             cache()->tags($this->bag)->set($this->cacheKey, $value, now()->addDay());
         } else {
@@ -120,10 +122,10 @@ class SettingsManager implements SettingsManagerInterface
 
     private function getCache(): mixed
     {
-        if ($this->bag) {
-            return cache()->tags($this->bag)->get($this->cacheKey);
-        } else {
-            return cache()->get($this->cacheKey);
-        }
+        $cache = $this->bag ? cache()->tags($this->bag) : cache();
+
+        return config('settings-manager.enable_cache') && $cache->has($this->cacheKey) 
+            ? $cache->get($this->cacheKey) 
+            : null;
     }
 }

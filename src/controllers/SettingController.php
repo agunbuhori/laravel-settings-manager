@@ -21,7 +21,7 @@ class SettingController extends Controller
             'per_page' => 'integer|max:100',
             'keys'     => 'nullable|string',
         ]);
-
+        
         $settings = Setting::when($request->has('keys'), function ($query) use ($request) {
                                 $query->whereIn('key', explode(',', $request->keys));
                             })
