@@ -71,7 +71,7 @@ class SettingsManager implements SettingsManagerInterface
             $value = Arr::set($data, $this->arrayKey, $value);
         } 
 
-        $setting->update(['value' => $value, 'type' => gettype($value)]);
+        $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
 
         $this->setCache($value);
     
