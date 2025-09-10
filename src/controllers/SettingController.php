@@ -43,11 +43,10 @@ class SettingController extends Controller
      */
     public function show(Request $request, string $key)
     {
-        $setting = Setting::where('key', $key)->firstOrFail();
+        $setting = settings()->get($key, null);
 
         return response()->json([
-            'result' => settings()->get($key),
-            'detail' => $setting
+            'value' => $setting,
         ]);
     }
 
@@ -67,5 +66,18 @@ class SettingController extends Controller
         settings()->set($key, $request->value);
 
         return response()->json(['message' => 'Setting updated successfully', 'data' => settings()->get($key)]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     * 
+     * @param string $key
+     * @return \Illuminate\Http\JsonResponse
+     * */
+    public function destroy(string $key)
+    {
+        settings()->set($key, null);
+
+        return response()->json(['message' => 'Setting deleted successfully', 'data' => null]);
     }
 }

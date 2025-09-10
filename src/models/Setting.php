@@ -49,7 +49,7 @@ class Setting extends Model
     {
         return Attribute::make(
             get: fn ($value) => match ($this->type) {
-                'array' => json_decode($value, true),
+                'array' => $value ? json_decode($value, true) : [],
                 'float' => floatval($value),
                 'integer' => intval($value),
                 'boolean' => boolval($value),

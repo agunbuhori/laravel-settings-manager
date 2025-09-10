@@ -12,9 +12,6 @@ use Illuminate\Cache\TaggedCache;
 class SettingsManager implements SettingsManagerInterface
 {
     use HasCache;
-
-    private ?int $bag = null;
-    private ?string $group = null;
     private string $key = '';
     private string $arrayKey = '';
     private string $cacheKey = '';
@@ -54,22 +51,27 @@ class SettingsManager implements SettingsManagerInterface
     {   
         $this->validateKey($key);
 
+        if ($value === null) {
+            Setting::where('key', $this->key)->delete();
+            $this->setCache(null);
+            return null;
+        }
+
         $setting = Setting::firstOrCreate(
             [
                 'key' => $this->key,
                 'bag' => $this->bagManager->getBag(),
-                'group' => $this->group,
+                'group' => $this->bagManager->getGroup(),
             ],
             [
                 'type' => $this->validatedType($value),
-                'value' => "[]"
             ]
         );
 
-        if (is_array($setting->value)) {
-            $data = $setting->value;
+        if (is_array($setting->value) || $this->arrayKey) {
+            $data = $setting->value ?? [];
             $value = Arr::set($data, $this->arrayKey, $value);
-        } 
+        }
 
         $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
 
@@ -119,6 +121,8 @@ class SettingsManager implements SettingsManagerInterface
 
     private function validatedType(mixed $value): string
     {
+        if ($this->arrayKey) return 'array';
+
         return str_replace('double', 'float', gettype($value));
     }
 }

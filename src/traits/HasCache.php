@@ -18,7 +18,12 @@ trait HasCache
 
     public function setCache(mixed $value): void
     {
-        if (!config('settings-manager.enable_cache') || $value === null) return;
+        if (!config('settings-manager.enable_cache')) return;
+
+        if ($value === null) {
+            $this->cache->forget($this->cacheKey);
+            return;
+        }
 
         $this->cache->set($this->cacheKey, serialize($value), config('settings-manager.cache_expiration', 86400));
     }
