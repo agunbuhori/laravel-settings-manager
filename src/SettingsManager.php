@@ -2,7 +2,6 @@
 
 namespace Agunbuhori\SettingsManager;
 
-use Illuminate\Support\Arr;
 use Agunbuhori\SettingsManager\Traits\HasCache;
 use Agunbuhori\SettingsManager\Models\Setting;
 use Agunbuhori\SettingsManager\SettingsBagManager;
@@ -98,7 +97,7 @@ class SettingsManager implements SettingsManagerInterface
         $result = $setting->value;
 
         if ($this->arrayKey) {
-            $result = Arr::get($result, $this->arrayKey, $default);
+            $result = data_get($result, $this->arrayKey, $default);
         }
 
         $this->setCache($result);
