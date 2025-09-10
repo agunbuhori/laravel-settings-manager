@@ -32,7 +32,7 @@ trait HasCache
     {
         if (!config('settings-manager.enable_cache')) return null;
 
-        return $this->cache->get($this->cacheKey);
+        return unserialize($this->cache->get($this->cacheKey));
     }
 
     public function getManyCache(): array

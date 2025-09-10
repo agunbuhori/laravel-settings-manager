@@ -88,7 +88,7 @@ class SettingsManager implements SettingsManagerInterface
         $this->validateKey($key);
 
         if ($setting = $this->getCache()) {
-            return unserialize($setting);
+            return $setting;
         }
 
         $setting = Setting::where('key', $this->key)->first();
