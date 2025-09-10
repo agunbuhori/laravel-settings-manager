@@ -2,7 +2,7 @@
 
 namespace Agunbuhori\SettingsManager;
 
-use DB;
+use Agunbuhori\SettingsManager\Traits\HasCache;
 use Illuminate\Support\Arr;
 use Agunbuhori\SettingsManager\Models\Setting;
 use Agunbuhori\SettingsManager\SettingsBagManager;
@@ -12,6 +12,8 @@ use Illuminate\Cache\TaggedCache;
 
 class SettingsManager implements SettingsManagerInterface
 {
+    use HasCache;
+
     private ?int $bag = null;
     private string $key = '';
     private string $arrayKey = '';
@@ -101,11 +103,6 @@ class SettingsManager implements SettingsManagerInterface
         return $result;
     }
 
-    private function parseSetting(array $setting): mixed
-    {
-        return null;
-    }
-
     private function validateKey(string $key): void
     {
         if (!preg_match('/^[a-zA-Z0-9\-\_.]+$/', $key)) {
@@ -120,26 +117,5 @@ class SettingsManager implements SettingsManagerInterface
         }
 
         $this->cacheKey = "settings:{$this->bag}:{$key}";
-    }
-
-    private function setCache(mixed $value): void
-    {
-        if (!config('settings-manager.enable_cache') || $value === null) return;
-
-        $this->cache->set($this->cacheKey, $value, 86400);
-    }
-
-    private function getCache(): mixed
-    {
-        if (!config('settings-manager.enable_cache')) return null;
-
-        return $this->cache->get($this->cacheKey);
-    }
-
-    public function clearCache(): void
-    {
-        if (!config('settings-manager.enable_cache')) return;
-
-        $this->cache->flush();
     }
 }
