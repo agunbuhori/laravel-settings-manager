@@ -1,33 +1,35 @@
-# Laravel Settings Manager
+# 📦 Settings Manager for Laravel
 
-A simple yet powerful way to store and manage application settings in Laravel.  
-Supports multiple bags (like tenants or users), nested keys, typed values, caching, and even a ready-to-use REST API.
+A simple and flexible **settings manager package** for Laravel.  
+It helps you store, retrieve, and manage application settings in the database — with support for:
 
----
-
-## ✨ Features
-
-- 🗄️ Store and retrieve settings directly from the database  
-- 🏷️ Support for **bags** and **groups** (e.g. per tenant or per user)  
-- 🧩 Use **dot notation** for nested settings (`mail.driver`, `mail.host`)  
-- 🔢 Automatic type handling: `string`, `integer`, `float`, `boolean`, `array`  
-- ⚡ Built-in **caching** for faster access  
-- 🌐 Optional **REST API endpoints** to manage settings via HTTP  
-- 🛠️ Easy integration with Laravel service container and helper functions  
+- ✅ Key/value settings  
+- ✅ Typed values (`string`, `integer`, `float`, `boolean`, `array`)  
+- ✅ Dot notation for nested arrays  
+- ✅ Cache support for performance  
+- ✅ Bag & group support (multi-tenant, multi-context)  
+- ✅ Bulk get (`getMany()`)  
+- ✅ REST API endpoints for settings management  
 
 ---
 
 ## 🚀 Installation
 
-Install the package via Composer:
+Require the package via Composer:
 
-```bash
+```
 composer require agunbuhori/settings-manager
 ```
 
-Run migrations to create the `settings` table:
+Publish the config file:
 
-```bash
+```
+php artisan vendor:publish --tag=settings-manager
+```
+
+Run the migrations:
+
+```
 php artisan migrate
 ```
 
@@ -35,143 +37,180 @@ php artisan migrate
 
 ## ⚙️ Configuration
 
-Publish the config file:
-
-```bash
-php artisan vendor:publish --tag=settings-manager
-```
-
-`config/settings-manager.php`:
+File: `config/settings-manager.php`
 
 ```php
 return [
-    'enable_cache' => true,
-    'cache_expiration' => 86400, // 1 day
-    'enable_api' => true,
+    'enable_cache'     => true,
+    'cache_expiration' => 86400, // 1 day in seconds
+    'enable_api'       => true,
 ];
 ```
 
 ---
 
-## 🔑 Basic Usage
+## 🛠 Usage
 
-### Set and get settings
+### 1. Basic set & get
 
 ```php
-// Save a setting
-settings()->set('site_name', 'My Awesome App');
-
-// Get a setting
-$name = settings()->get('site_name', 'Default Name');
+settings()->set('site_name', 'My App');
+$name = settings()->get('site_name'); // "My App"
 ```
 
-### Delete a setting
+---
+
+### 2. Arrays & dot notation
 
 ```php
-settings()->set('site_name', null);
+settings()->set('app.theme.color', 'blue');
+settings()->set('app.theme.layout', 'grid');
+
+$color = settings()->get('app.theme.color'); // "blue"
 ```
 
-### Nested (dot notation)
+---
+
+### 3. Typed values
 
 ```php
-settings()->set('mail.driver', 'smtp');
-settings()->set('mail.host', 'smtp.example.com');
-
-$driver = settings()->get('mail.driver'); // smtp
+settings()->set('max_users', 100);        // integer
+settings()->set('pi_value', 3.14);        // float
+settings()->set('is_active', true);       // boolean
+settings()->set('allowed_ips', ['1.1.1.1', '8.8.8.8']); // array
 ```
 
-### Bags & groups
+---
 
-Useful for **multi-tenant** or **user-based** settings.
+### 4. Multiple settings at once
 
 ```php
-// Bag 1, group "profile"
-settings()->bag(1, 'profile')->set('language', 'id');
+$data = settings()->getMany(['site_name', 'is_active', 'max_users']);
 
-// Switch to general (no bag)
+/*
+[
+    "site_name" => "My App",
+    "is_active" => true,
+    "max_users" => 100
+]
+*/
+```
+
+---
+
+### 5. Bag-specific settings (multi-tenant)
+
+```php
+// Bag #1
+settings()->bag(1)->set('currency', 'USD');
+
+// Bag #2
+settings()->bag(2)->set('currency', 'EUR');
+
+// Retrieve per bag
+settings()->bag(1)->get('currency'); // USD
+settings()->bag(2)->get('currency'); // EUR
+```
+
+---
+
+### 6. General settings (no bag)
+
+```php
 settings()->general()->set('timezone', 'UTC');
+settings()->general()->get('timezone'); // UTC
 ```
 
 ---
 
-## 🌐 REST API
+## 🌐 API Endpoints
 
-When `enable_api` is `true`, the package registers API routes:
+If `enable_api` is set to `true`, the following routes are auto-loaded:
 
 ```
-GET    /settings           # List settings
-GET    /settings/{key}     # Get single setting
-PUT    /settings/{key}     # Update setting
-PATCH  /settings/{key}     # Update setting
-POST   /settings/{key}     # Update setting
-DELETE /settings/{key}     # Delete setting
+GET     /settings?per_page=10&keys=site_name,is_active
+GET     /settings/{key}
+POST    /settings/{key}   (or PUT/PATCH)
+DELETE  /settings/{key}
 ```
 
-### Examples
+### Example: Fetch a setting
 
-#### List settings
 ```
-GET /api/settings?per_page=20&keys=site_name,theme&bag=1&group=profile
-```
-
-#### Get setting
-```
-GET /api/settings/site_name
+GET /settings/site_name
+→ { "value": "My App" }
 ```
 
-#### Update setting
+### Example: Update a setting
+
 ```
-PUT /api/settings/site_name
+POST /settings/site_name
 {
-  "value": "My New App"
+  "value": "New Name"
 }
+→ { "message": "Setting updated successfully", "data": "New Name" }
 ```
 
-#### Delete setting
+### Example: Delete a setting
+
 ```
-DELETE /api/settings/site_name
+DELETE /settings/site_name
+→ { "message": "Setting deleted successfully", "data": null }
 ```
 
 ---
 
-## 🧩 Value Types
+## 🔑 Middleware Support
 
-Values are automatically cast based on type:
+All API routes are wrapped with `SettingsManagerMiddleware`.  
+This allows you to pass **bag** and **group** via query string:
 
-- `"string"`
-- `"integer"`
-- `"float"`
-- `"boolean"`
-- `"array"` (stored as JSON)
+```
+GET /settings?bag=1&group=users
+```
 
-Example:
+That way, your API can handle multiple contexts (multi-tenant, multi-organization, etc.).
+
+---
+
+## 🧩 Helper Function
+
+You can call the global helper:
 
 ```php
-settings()->set('maintenance_mode', true);
-settings()->set('max_users', 100);
-settings()->set('features', ['chat' => true, 'billing' => false]);
+settings()->set('foo', 'bar');
+$value = settings()->get('foo'); // "bar"
 ```
 
 ---
 
-## ⚡ Caching
+## 📂 Project Structure (important files)
 
-- Settings are cached for faster access
-- Configurable via `settings-manager.php`:
-  - `enable_cache` → true/false
-  - `cache_expiration` → in seconds (default 1 day)
+```
+app/
+config/
+    settings-manager.php
+routes/
+    api.php   // Settings API routes
+database/
+    migrations/
+        create_settings_table.php
+src/
+    Controllers/SettingController.php
+    Middlewares/SettingsManagerMiddleware.php
+    Models/Setting.php
+    SettingsManager.php
+    SettingsBagManager.php
+```
 
 ---
 
-## 🎯 Why use this package?
+## ✅ Summary
 
-- Replace `.env` configs that need runtime updates  
-- Manage tenant or user-specific settings easily  
-- Access settings with simple `settings()->get()` calls  
-- Expose settings management over a secure API if needed  
+- Store any type of settings (`string`, `int`, `float`, `bool`, `array`)  
+- Use dot notation for arrays (`app.theme.color`)  
+- Switch between **general**, **bag**, and **group** easily  
+- Cache for faster performance  
+- Full REST API included out of the box  
 
 ---
-
-## 📄 License
-
-MIT
