@@ -45,7 +45,10 @@ class SettingController extends Controller
     {
         $setting = Setting::where('key', $key)->firstOrFail();
 
-        return response()->json($setting);
+        return response()->json([
+            'result' => settings()->get($key),
+            'detail' => $setting
+        ]);
     }
 
     /**
