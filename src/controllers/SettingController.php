@@ -35,7 +35,7 @@ class SettingController extends Controller
      * @param string $key
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(string $key)
+    public function show(Request $request, string $key)
     {
         $setting = Setting::where('key', $key)->firstOrFail();
 
