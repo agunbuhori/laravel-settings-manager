@@ -24,6 +24,8 @@ class SettingController extends Controller
         $settings = Setting::when($request->has('keys'), function ($query) use ($request) {
                                 $query->whereIn('key', explode(',', $request->keys));
                             })
+                            ->when($request->has('bag'), fn ($query) => $query->where('bag', $request->bag))
+                            ->when($request->has('group'), fn ($query) => $query->where('group', $request->group))
                             ->cursorPaginate($request->get('per_page', 10));
 
         return response()->json($settings);
@@ -37,7 +39,10 @@ class SettingController extends Controller
      */
     public function show(Request $request, string $key)
     {
-        $setting = Setting::where('key', $key)->firstOrFail();
+        $setting = Setting::where('key', $key)
+                            ->when($request->has('bag'), fn ($query) => $query->where('bag', $request->bag))
+                            ->when($request->has('group'), fn ($query) => $query->where('group', $request->group))
+                            ->firstOrFail();
 
         return response()->json($setting);
     }
