@@ -14,7 +14,7 @@ class Setting extends Model
      * 
      * @var array
      */
-    protected $fillable = ['bag', 'key', 'type', 'value'];
+    protected $fillable = ['bag', 'group', 'key', 'type', 'value'];
 
     /**
      * The attributes that should be hidden for serialization.
