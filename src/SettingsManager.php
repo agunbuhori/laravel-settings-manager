@@ -2,8 +2,8 @@
 
 namespace Agunbuhori\SettingsManager;
 
-use Agunbuhori\SettingsManager\Traits\HasCache;
 use Illuminate\Support\Arr;
+use Agunbuhori\SettingsManager\Traits\HasCache;
 use Agunbuhori\SettingsManager\Models\Setting;
 use Agunbuhori\SettingsManager\SettingsBagManager;
 use Agunbuhori\SettingsManager\Interfaces\SettingsManagerInterface;
@@ -73,7 +73,7 @@ class SettingsManager implements SettingsManagerInterface
 
         if (is_array($setting->value) || $this->arrayKey) {
             $data = $setting->value ?? [];
-            $value = Arr::set($data, $this->arrayKey, $value);
+            $value = data_fill($data, $this->arrayKey, $value);
         }
 
         $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
