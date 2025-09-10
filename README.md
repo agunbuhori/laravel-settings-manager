@@ -133,7 +133,7 @@ settings()->general()->get('timezone'); // UTC
 
 ---
 
-## Bags and Groups
+## 💼 Bags and Groups
 
 In this settings manager, **bags** are used to define the main scope of your settings.  
 You can think of a bag as a container for a specific context, such as an office, a user, or a project.  
