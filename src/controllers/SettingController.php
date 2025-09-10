@@ -13,10 +13,11 @@ class SettingController extends Controller
      * Display a listing of the resource.
      * 
      * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
+        return settings()->get('name');
+        
         $request->validate([
             'per_page' => 'integer|max:100',
             'keys'     => 'nullable|string',

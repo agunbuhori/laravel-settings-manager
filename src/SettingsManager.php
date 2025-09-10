@@ -7,7 +7,6 @@ use Illuminate\Support\Arr;
 use Agunbuhori\SettingsManager\Models\Setting;
 use Agunbuhori\SettingsManager\SettingsBagManager;
 use Agunbuhori\SettingsManager\Interfaces\SettingsManagerInterface;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Cache\TaggedCache;
 
 class SettingsManager implements SettingsManagerInterface
@@ -15,31 +14,34 @@ class SettingsManager implements SettingsManagerInterface
     use HasCache;
 
     private ?int $bag = null;
+    private ?string $group = null;
     private string $key = '';
     private string $arrayKey = '';
     private string $cacheKey = '';
     private TaggedCache $cache;
 
-    private static const CACHE_KEY = 'settings-manager';
-
     public function __construct(private SettingsBagManager $bagManager)
     {
         $this->bag = $bagManager->getBag();
+        $this->group = $bagManager->getGroup();
 
-        $this->cache = $this->bag 
-            ? Cache::tags([self::CACHE_KEY, $this->bag]) 
-            : Cache::tags(self::CACHE_KEY);
+        $this->setCacheTags();
     }
 
-    public function setBag(int $bag): void
+    public function setBag(int $bag, ?string $group = null): void
     {
         $this->bagManager->setBag($bag);
+        $this->bagManager->setGroup($group);
+
+        $this->setCacheTags();
     }
 
-    public function bag(int $bag): self
+    public function bag(int $bag, ?string $group = null): self
     {
         $this->bag = $bag;
-        $this->cache = Cache::tags([self::CACHE_KEY, $bag]);
+        $this->group = $group;
+
+        $this->setCacheTags();
 
         return $this;
     }
@@ -47,7 +49,9 @@ class SettingsManager implements SettingsManagerInterface
     public function general(): self
     {
         $this->bag = null;
-        $this->cache = Cache::tags(self::CACHE_KEY);
+        $this->group = null;
+
+        $this->setCacheTags();
 
         return $this;
     }
