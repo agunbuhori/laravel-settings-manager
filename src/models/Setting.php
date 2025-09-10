@@ -21,7 +21,7 @@ class Setting extends Model
      * 
      * @var array
      */
-    public $hidden = ['created_at', 'updated_at', 'id', 'type'];
+    public $hidden = ['created_at', 'updated_at', 'id'];
 
     /**
      * The "booted" method of the model.
