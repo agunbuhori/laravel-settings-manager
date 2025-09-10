@@ -22,6 +22,7 @@ class SettingsManagerServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__ . '/config/settings-manager.php' => config_path('settings-manager.php'),
+            __DIR__ . '/database/migrations/2025_09_08_040901_create_settings_table.php' => database_path('migrations/2025_09_08_040901_create_settings_table.php'),
         ], 'settings-manager');
     }
 }
