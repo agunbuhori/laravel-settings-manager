@@ -1,218 +1,177 @@
 # Laravel Settings Manager
 
-A powerful and flexible **settings manager** for Laravel that allows you to store, retrieve, and manage application or user-specific settings with **bags**, **groups**, **dot notation**, **type casting**, and **cache support**.
+A simple yet powerful way to store and manage application settings in Laravel.  
+Supports multiple bags (like tenants or users), nested keys, typed values, caching, and even a ready-to-use REST API.
 
 ---
 
-## 📦 Installation
+## ✨ Features
 
-Install via Composer:
+- 🗄️ Store and retrieve settings directly from the database  
+- 🏷️ Support for **bags** and **groups** (e.g. per tenant or per user)  
+- 🧩 Use **dot notation** for nested settings (`mail.driver`, `mail.host`)  
+- 🔢 Automatic type handling: `string`, `integer`, `float`, `boolean`, `array`  
+- ⚡ Built-in **caching** for faster access  
+- 🌐 Optional **REST API endpoints** to manage settings via HTTP  
+- 🛠️ Easy integration with Laravel service container and helper functions  
+
+---
+
+## 🚀 Installation
+
+Install the package via Composer:
 
 ```bash
 composer require agunbuhori/settings-manager
 ```
 
----
-
-## ⚙️ Setup
-
-Run the migration to create the `settings` table:
+Run migrations to create the `settings` table:
 
 ```bash
 php artisan migrate
 ```
 
-### Example Migration
+---
 
-```php
-Schema::create('settings', function (Blueprint $table) {
-    $table->id();
-    $table->unsignedBigInteger('bag')->nullable()->index();
-    $table->string('group')->nullable()->index();
-    $table->string('key')->index();
-    $table->enum('type', ['string', 'integer', 'float', 'boolean', 'array']);
-    $table->text('value')->nullable();
-    $table->timestamps();
-});
-```
+## ⚙️ Configuration
 
-### Configuration
-
-You can publish and customize the config:
+Publish the config file:
 
 ```bash
 php artisan vendor:publish --tag=settings-manager
 ```
 
-Example `config/settings-manager.php`:
+`config/settings-manager.php`:
 
 ```php
 return [
     'enable_cache' => true,
+    'cache_expiration' => 86400, // 1 day
+    'enable_api' => true,
 ];
 ```
 
 ---
 
-## 🚀 Usage
+## 🔑 Basic Usage
 
-### 1. Basic Set & Get
+### Set and get settings
 
 ```php
+// Save a setting
 settings()->set('site_name', 'My Awesome App');
 
-$name = settings()->get('site_name'); // "My Awesome App"
+// Get a setting
+$name = settings()->get('site_name', 'Default Name');
 ```
 
-With default:
+### Delete a setting
 
 ```php
-$theme = settings()->get('theme', 'light'); // "light" if not set
+settings()->set('site_name', null);
 ```
 
----
-
-### 2. Supported Types
-
-The manager automatically casts values by type:
-
-| PHP Type   | Stored as DB `type` | Example Value                       |
-|------------|---------------------|-------------------------------------|
-| `string`   | string              | `"Hello World"`                     |
-| `integer`  | integer             | `42`                                |
-| `float`    | float               | `3.14`                              |
-| `boolean`  | boolean             | `true / false`                      |
-| `array`    | array (JSON)        | `['host' => 'smtp.test.com']`       |
-
-```php
-settings()->set('max_users', 100);
-settings()->set('pi', 3.14);
-settings()->set('is_active', true);
-settings()->set('options', ['a' => 1]);
-```
-
----
-
-### 3. Dot Notation for Arrays
+### Nested (dot notation)
 
 ```php
 settings()->set('mail.driver', 'smtp');
-settings()->set('mail.host', 'smtp.mailtrap.io');
+settings()->set('mail.host', 'smtp.example.com');
 
-$driver = settings()->get('mail.driver'); // "smtp"
+$driver = settings()->get('mail.driver'); // smtp
+```
+
+### Bags & groups
+
+Useful for **multi-tenant** or **user-based** settings.
+
+```php
+// Bag 1, group "profile"
+settings()->bag(1, 'profile')->set('language', 'id');
+
+// Switch to general (no bag)
+settings()->general()->set('timezone', 'UTC');
 ```
 
 ---
 
-### 4. Bags (Tenant / User Isolation)
+## 🌐 REST API
 
-A **bag** isolates settings by ID, useful for multi-tenant or user-based configurations.
+When `enable_api` is `true`, the package registers API routes:
 
-```php
-// Tenant 1 settings
-settings()->bag(1)->set('timezone', 'Asia/Jakarta');
-
-// Retrieve
-$tz = settings()->bag(1)->get('timezone'); // "Asia/Jakarta"
+```
+GET    /settings           # List settings
+GET    /settings/{key}     # Get single setting
+PUT    /settings/{key}     # Update setting
+PATCH  /settings/{key}     # Update setting
+POST   /settings/{key}     # Update setting
+DELETE /settings/{key}     # Delete setting
 ```
 
-### 5. Groups (Logical Grouping within a Bag)
+### Examples
 
-Groups allow you to organize settings under a bag.
-
-```php
-// Bag 1, group "notifications"
-settings()->bag(1, 'notifications')->set('email.enabled', true);
-
-// Bag 1, group "appearance"
-settings()->bag(1, 'appearance')->set('theme', 'dark');
-
-// Retrieve
-$enabled = settings()->bag(1, 'notifications')->get('email.enabled'); // true
+#### List settings
+```
+GET /api/settings?per_page=20&keys=site_name,theme&bag=1&group=profile
 ```
 
-> ⚠️ Groups require a bag. If you set a group without a bag, an exception will be thrown.
-
----
-
-### 6. General (Global Settings)
-
-```php
-settings()->general()->set('app.locale', 'en');
-
-$locale = settings()->general()->get('app.locale');
+#### Get setting
+```
+GET /api/settings/site_name
 ```
 
----
-
-### 7. Caching
-
-- Tagged cache is automatically applied with tags:  
-  `['settings-manager', {bag}, {group}]`
-- Each value is cached for **1 day (86400 seconds)**.  
-- Disable caching via config:
-
-```php
-'settings-manager.enable_cache' => false,
+#### Update setting
+```
+PUT /api/settings/site_name
+{
+  "value": "My New App"
+}
 ```
 
-#### Clear cache manually
-
-```php
-settings()->clearCache();
+#### Delete setting
+```
+DELETE /api/settings/site_name
 ```
 
 ---
 
-## 🔌 REST API Endpoints
+## 🧩 Value Types
 
-This package includes a controller with ready-to-use routes.
+Values are automatically cast based on type:
 
-```php
-GET    /settings            // List settings (?keys=site_name,theme&per_page=20)
-GET    /settings/{key}      // Show a single setting
-POST   /settings/{key}      // Update setting
-PUT    /settings/{key}      // Update setting
-PATCH  /settings/{key}      // Update setting
-```
+- `"string"`
+- `"integer"`
+- `"float"`
+- `"boolean"`
+- `"array"` (stored as JSON)
 
 Example:
 
-```bash
-curl -X POST http://your-app.test/settings/site_name \
-     -H "Content-Type: application/json" \
-     -d '{"value": "My Updated App"}'
-```
-
----
-
-## 📚 Example: Multi-Tenant Usage
-
 ```php
-// Store theme per tenant
-settings()->bag(auth()->user()->tenant_id, 'appearance')->set('theme', 'dark');
-
-// Later retrieve
-$theme = settings()->bag(auth()->user()->tenant_id, 'appearance')->get('theme');
+settings()->set('maintenance_mode', true);
+settings()->set('max_users', 100);
+settings()->set('features', ['chat' => true, 'billing' => false]);
 ```
 
 ---
 
-## ✅ Features
+## ⚡ Caching
 
-```txt
-- Store and retrieve settings easily
-- Supports multiple data types (string, int, float, bool, array)
-- Dot notation for nested arrays
-- Bags for tenant/user-specific isolation
-- Groups for logical categorization within a bag
-- Configurable caching (with tags per bag+group)
-- REST API endpoints included
-- Global `settings()` helper available
-```
+- Settings are cached for faster access
+- Configurable via `settings-manager.php`:
+  - `enable_cache` → true/false
+  - `cache_expiration` → in seconds (default 1 day)
 
 ---
 
-## 📝 License
+## 🎯 Why use this package?
 
-This package is open-source software licensed under the MIT license.
+- Replace `.env` configs that need runtime updates  
+- Manage tenant or user-specific settings easily  
+- Access settings with simple `settings()->get()` calls  
+- Expose settings management over a secure API if needed  
+
+---
+
+## 📄 License
+
+MIT
