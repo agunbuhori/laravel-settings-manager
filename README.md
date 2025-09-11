@@ -87,7 +87,7 @@ settings()->set('allowed_ips', ['1.1.1.1', '8.8.8.8']); // array
 ```php
 $data = settings()->getMany(['site_name', 'is_active', 'max_users']);
 
-or set many
+// or set many
 settings()->setMany(['domain' => 'www.example.com', 'name' => 'My cool website']);
 
 /*
