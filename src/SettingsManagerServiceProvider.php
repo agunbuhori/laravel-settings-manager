@@ -10,6 +10,7 @@ class SettingsManagerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton(SettingsBagManager::class, fn () => new SettingsBagManager(null));
+        $this->app->singleton(SettingsManagerAuthorization::class, SettingsManagerAuthorization::class);
         $this->app->bind(SettingsManagerInterface::class, SettingsManager::class);
 
         $this->mergeConfigFrom(__DIR__ . '/config/settings-manager.php','settings-manager');
