@@ -35,6 +35,15 @@ interface SettingsManagerInterface
      * @return mixed
      */
     public function set(string $key, mixed $value): mixed;
+    
+    /**
+     * Set many values for a key
+     * 
+     * @param string $key
+     * @param mixed $value
+     * @return mixed
+     */
+    public function setMany(array $values): mixed;
 
     /**
      * Get a value for a key

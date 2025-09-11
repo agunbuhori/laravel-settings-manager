@@ -136,6 +136,15 @@ class SettingsManager implements SettingsManagerInterface
         return $data;
     }
 
+    public function setMany(array $values): array
+    {
+        foreach ($values as $key => $value) {
+            $this->set($key, $value);
+        }
+
+        return $values;
+    }
+
     private function validateKey(string $key): string
     { 
         if (!preg_match('/^[a-zA-Z0-9\-\_.]+$/', $key)) {
