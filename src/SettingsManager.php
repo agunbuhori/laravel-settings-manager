@@ -21,6 +21,9 @@ class SettingsManager implements SettingsManagerInterface
 
     public function __construct(private SettingsBagManager $bagManager)
     {
+        $this->bag = $bagManager->getBag();
+        $this->group = $bagManager->getGroup();
+        
         $this->setCacheTags();
     }
 
