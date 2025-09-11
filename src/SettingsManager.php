@@ -138,7 +138,7 @@ class SettingsManager implements SettingsManagerInterface
 
     public function setMany(array $values): array
     {
-        collect($values)->each(fn ($key, $value) => $this->set($key, $value));
+        collect($values)->each(fn ($value, $key) => $this->set($key, $value));
 
         return $values;
     }
