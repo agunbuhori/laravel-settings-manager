@@ -78,6 +78,6 @@ class SettingController extends Controller
     {
         settings()->set($key, null);
 
-        return response()->json(['message' => 'Setting deleted successfully', 'data' => null]);
+        return response()->json(['message' => 'Setting deleted successfully']);
     }
 }
