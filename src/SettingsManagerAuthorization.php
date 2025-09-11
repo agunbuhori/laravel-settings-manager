@@ -4,7 +4,7 @@ namespace Agunbuhori\SettingsManager;
 
 class SettingsManagerAuthorization
 {
-    public static bool $isAuthorized = false;
+    public static bool $isAuthorized = true;
 
     public static function authorize(callable $callback)
     {
