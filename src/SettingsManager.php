@@ -119,7 +119,7 @@ class SettingsManager implements SettingsManagerInterface
     {
         $this->cacheKeys = collect($keys)->map(fn ($key) => $this->validateKey($key))->toArray();
 
-        if ($settings = $this->getManyCache()) {
+        if (count($settings = $this->getManyCache())) {
             return $settings;
         }
 
