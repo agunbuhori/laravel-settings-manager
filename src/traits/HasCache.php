@@ -2,7 +2,6 @@
 
 namespace Agunbuhori\SettingsManager\Traits;
 
-use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
 
 trait HasCache
