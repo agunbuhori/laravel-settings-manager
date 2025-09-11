@@ -24,19 +24,6 @@ class Setting extends Model
     public $hidden = ['created_at', 'updated_at', 'id'];
 
     /**
-     * The "booted" method of the model.
-     * 
-     * @return void
-     */
-    protected static function booted(): void
-    {
-        static::addGlobalScope('bag', function (Builder $builder) {
-            $builder->where('bag', app(SettingsBagManager::class)->getBag())
-                    ->where('group', app(SettingsBagManager::class)->getGroup());
-        });
-    }
-
-    /**
      * Get the value of the setting.
      * 
      * @return Attribute

@@ -10,7 +10,7 @@ class SettingController extends Controller
 {
     public function __construct(Request $request)
     {
-        if ($request->has('bag')) {
+        if ($request->has('bag') || $request->has('group')) {
             settings()->setBag((int) $request->bag, $request->group);
         }
     }

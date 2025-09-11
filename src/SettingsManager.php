@@ -11,6 +11,8 @@ use Illuminate\Cache\TaggedCache;
 class SettingsManager implements SettingsManagerInterface
 {
     use HasCache;
+    private ?int $bag = null;
+    private?string $group = null;
     private string $key = '';
     private string $arrayKey = '';
     private string $cacheKey = '';
@@ -31,7 +33,8 @@ class SettingsManager implements SettingsManagerInterface
 
     public function bag(int $bag, ?string $group = null): self
     {
-        $this->bagManager->setBag($bag, $group);
+        $this->bag = $bag;
+        $this->group = $group;
 
         $this->setCacheTags();
 
@@ -40,7 +43,8 @@ class SettingsManager implements SettingsManagerInterface
 
     public function general(): self
     {
-        $this->bagManager->setBag(null, null);
+        $this->bag = null;
+        $this->group = null;
 
         $this->setCacheTags();
 
@@ -52,7 +56,7 @@ class SettingsManager implements SettingsManagerInterface
         $this->validateKey($key);
 
         if ($value === null) {
-            Setting::where('key', $this->key)->delete();
+            Setting::where(['bag' => $this->bag, 'group' => $this->group, 'key' => $this->key])->delete();
             $this->setCache(null);
             return null;
         }
@@ -62,8 +66,8 @@ class SettingsManager implements SettingsManagerInterface
         $setting = Setting::firstOrCreate(
             [
                 'key' => $this->key,
-                'bag' => $this->bagManager->getBag(),
-                'group' => $this->bagManager->getGroup(),
+                'bag' => $this->bag,
+                'group' => $this->group,
             ],
             [
                 'type' => $this->validatedType($value),
@@ -90,7 +94,7 @@ class SettingsManager implements SettingsManagerInterface
             return $setting;
         }
 
-        $setting = Setting::where('key', $this->key)->first();
+        $setting = Setting::where(['bag' => $this->bag, 'group' => $this->group, 'key' => $this->key])->first();
 
         if (!$setting) return $default;
 
@@ -113,7 +117,7 @@ class SettingsManager implements SettingsManagerInterface
             return $settings;
         }
 
-        $settings = Setting::whereIn('key', $keys)->get();
+        $settings = Setting::whereIn('key', $keys)->where(['bag' => $this->bag, 'group' => $this->group])->get();
 
         $data = [];
 
