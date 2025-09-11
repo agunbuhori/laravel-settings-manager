@@ -28,6 +28,9 @@ class SettingsManager implements SettingsManagerInterface
     {
         $this->bagManager->setBag($bag, $group);
 
+        $this->bag = $bag;
+        $this->group = $group;
+
         $this->setCacheTags();
     }
 
