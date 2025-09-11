@@ -10,7 +10,7 @@ trait HasCache
     public function setCacheTags()
     {
         $this->cache = Cache::tags(
-            collect(['settings-manager', $this->bagManager->getBag(), $this->bagManager->getGroup()])
+            collect(['settings-manager', $this->bag, $this->group])
                     ->filter(fn ($item) => $item !== null)
                     ->toArray()
         ); 
