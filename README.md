@@ -87,6 +87,9 @@ settings()->set('allowed_ips', ['1.1.1.1', '8.8.8.8']); // array
 ```php
 $data = settings()->getMany(['site_name', 'is_active', 'max_users']);
 
+or set many
+settings()->setMany(['domain' => 'www.example.com', 'name' => 'My cool website']);
+
 /*
 [
     "site_name" => "My App",
@@ -165,6 +168,14 @@ GET     /settings?per_page=10&keys=site_name,is_active
 GET     /settings/{key}
 POST    /settings/{key}   (or PUT/PATCH)
 DELETE  /settings/{key}
+```
+
+Also you can conditionally authorize
+
+```php
+SettingsManagerAuthorization::authorize(function () {
+    return auth()->user()->isAdmin();
+});
 ```
 
 ### Example: Fetch a setting
