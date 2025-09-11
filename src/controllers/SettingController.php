@@ -8,10 +8,10 @@ use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
-    public function __construct(Request $request)
+    public function __construct(Request $request, private Setting $setting)
     {
         if ($request->has('bag') || $request->has('group')) {
-            settings()->setBag((int) $request->bag, $request->group);
+            $setting->where('bag', $request->bag)->where('group', $request->group);
         }
     }
 
@@ -27,7 +27,7 @@ class SettingController extends Controller
             'keys'     => 'nullable|string',
         ]);
         
-        $settings = Setting::when($request->has('keys'), function ($query) use ($request) {
+        $settings = $this->setting->when($request->has('keys'), function ($query) use ($request) {
                                 $query->whereIn('key', explode(',', $request->keys));
                             })
                             ->cursorPaginate($request->get('per_page', 10));
