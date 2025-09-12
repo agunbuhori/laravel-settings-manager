@@ -134,7 +134,7 @@ settings()->general()->set('timezone', 'UTC');
 settings()->general()->get('timezone'); // UTC
 ```
 
----f
+---
 
 ### 8. Optionally set cache
 
