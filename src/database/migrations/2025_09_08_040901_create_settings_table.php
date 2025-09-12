@@ -15,6 +15,7 @@ class CreateSettingsTable extends Migration
             $table->string('key')->index();
             $table->enum('type', ['string', 'integer', 'float', 'boolean', 'array']);
             $table->text('value')->nullable();
+            $table->boolean('cache')->default(true);
             $table->timestamps();
         });
     }

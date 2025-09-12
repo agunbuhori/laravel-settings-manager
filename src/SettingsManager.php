@@ -57,7 +57,7 @@ class SettingsManager implements SettingsManagerInterface
         return $this;
     }
 
-    public function set(string $key, mixed $value): mixed
+    public function set(string $key, mixed $value, bool $saveInCache = true): mixed
     {   
         $this->validateKey($key);
 
@@ -77,6 +77,7 @@ class SettingsManager implements SettingsManagerInterface
             ],
             [
                 'type' => $this->validatedType($value),
+                'cache' => $saveInCache,
             ]
         );
 
@@ -87,7 +88,7 @@ class SettingsManager implements SettingsManagerInterface
 
         $setting->update(['value' => $value, 'type' => $this->validatedType($value)]);
 
-        $this->setCache($initialValue);
+        $saveInCache && $this->setCache($initialValue);
     
         return $value;
     }
@@ -110,35 +111,35 @@ class SettingsManager implements SettingsManagerInterface
             $result = data_get($result, $this->arrayKey, $default);
         }
 
-        $this->setCache($result);
+        $setting->cache && $this->setCache($result);
 
         return $result;
     }
 
     public function getMany(array $keys): array
     {
-        $this->cacheKeys = collect($keys)->map(fn ($key) => $this->validateKey($key))->toArray();
+        $cache = collect($keys)->mapWithKeys(fn ($key) => [$key => $this->getCache($key)]);
 
-        if (count($settings = $this->getManyCache())) {
-            return $settings;
+        if ($cache->count() === count($keys)) {
+            return $cache->toArray();
         }
 
         $settings = Setting::whereIn('key', $keys)->where(['bag' => $this->bag, 'group' => $this->group])->get();
 
-        $data = [];
-
         foreach ($settings as $setting) {
-            $data[$setting->key] = $setting->value;
+            if ($setting->cache) {
+                $this->setCache($setting->value, $setting->key);
+            }
         }
 
-        $this->setManyCache($data);
-
-        return $data;
+        return $settings->mapWithKeys(fn ($setting) => [$setting->key => $setting->value])->toArray();
     }
 
-    public function setMany(array $values): array
+    public function setMany(array $values, bool $saveInCache = true): array
     {
-        collect($values)->each(fn ($value, $key) => $this->set($key, $value));
+        foreach ($values as $key => $value) {
+            $this->set($key, $value, $saveInCache);
+        }
 
         return $values;
     }

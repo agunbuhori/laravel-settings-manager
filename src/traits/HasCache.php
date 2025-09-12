@@ -15,43 +15,23 @@ trait HasCache
         ); 
     }
 
-    public function setCache(mixed $value): void
+    public function setCache(mixed $value, string $key = null): void
     {
         if (!config('settings-manager.enable_cache')) return;
 
         if ($value === null) {
-            $this->cache->forget($this->cacheKey);
+            $this->cache->forget("settings:$key" ?? $this->cacheKey);
             return;
         }
 
-        $this->cache->set($this->cacheKey, serialize($value), config('settings-manager.cache_expiration', 86400));
+        $this->cache->set($key ? "settings:$key" : $this->cacheKey, serialize($value), config('settings-manager.cache_expiration', 86400));
     }
 
-    public function getCache(): mixed
+    public function getCache(string $key = null): mixed
     {
         if (!config('settings-manager.enable_cache')) return null;
 
-        return unserialize($this->cache->get($this->cacheKey));
-    }
-
-    public function getManyCache(): array
-    {
-        if (!config('settings-manager.enable_cache')) return [];
-
-        return collect($this->cache->many($this->cacheKeys))
-                ->filter(fn ($value) => $value !== null)
-                ->mapWithKeys(fn ($value, $key) => [str_replace('settings:', '', $key) => unserialize($value)])
-                ->toArray();
-    }
-
-    public function setManyCache(array $values): void
-    {
-        if (!config('settings-manager.enable_cache')) return;
-
-        $this->cache->putMany(collect($values)
-            ->mapWithKeys(fn ($value, $key) => ["settings:{$key}" => serialize($value)])
-            ->toArray(), config('settings-manager.cache_expiration', 86400)
-        );
+        return unserialize($this->cache->get($key ? "settings:$key" : $this->cacheKey));
     }
 
     public function clearCache(): void
