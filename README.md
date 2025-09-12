@@ -134,6 +134,15 @@ settings()->general()->set('timezone', 'UTC');
 settings()->general()->get('timezone'); // UTC
 ```
 
+---f
+
+### 8. Optionally set cache
+
+```php
+settings()->general()->set('timezone', 'UTC', true); // will be saved to cache
+settings()->general()->set('country', 'USA', false); // won't be saved to cache
+```
+
 ---
 
 ## 💼 Bags and Groups
