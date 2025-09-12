@@ -267,3 +267,9 @@ src/
 - Full REST API included out of the box  
 
 ---
+
+---
+
+## ❤️ License
+
+MIT © Agun Buhori
