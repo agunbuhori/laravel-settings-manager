@@ -2,7 +2,6 @@
 
 namespace Agunbuhori\SettingsManager;
 
-use Agunbuhori\SettingsManager\Traits\HasCache;
 use Agunbuhori\SettingsManager\Models\Setting;
 use Agunbuhori\SettingsManager\SettingsBagManager;
 use Agunbuhori\SettingsManager\Interfaces\SettingsManagerInterface;
@@ -11,6 +10,7 @@ use Illuminate\Cache\TaggedCache;
 class SettingsManager implements SettingsManagerInterface
 {
     use HasCache;
+
     private ?int $bag = null;
     private?string $group = null;
     private string $key = '';

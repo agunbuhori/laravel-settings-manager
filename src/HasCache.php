@@ -1,6 +1,6 @@
 <?php
 
-namespace Agunbuhori\SettingsManager\Traits;
+namespace Agunbuhori\SettingsManager;
 
 use Illuminate\Support\Facades\Cache;
 
