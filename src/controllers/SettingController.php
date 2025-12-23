@@ -80,4 +80,22 @@ class SettingController extends Controller
 
         return response()->json(['message' => 'Setting deleted successfully']);
     }
+
+    /**
+     * Clear cache by bag.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function clearCache(Request $request)
+    {
+        $request->validate([
+            'bag' => 'nullable|integer',
+            'group' => 'nullable|string',
+        ]);
+
+        settings()->flush($request->bag, $request->group);
+
+        return response()->json(['message' => 'Cache cleared successfully']);
+    }
 }

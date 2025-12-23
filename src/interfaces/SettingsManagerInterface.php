@@ -68,4 +68,13 @@ interface SettingsManagerInterface
      * @return void
      */
     public function clearCache(): void;
+
+    /**
+     * Flush cache by bag
+     * 
+     * @param int|null $bag
+     * @param string|null $group
+     * @return void
+     */
+    public function flush(?int $bag = null, ?string $group = null): void;
 }

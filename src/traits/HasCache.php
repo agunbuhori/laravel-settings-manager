@@ -40,4 +40,15 @@ trait HasCache
 
         $this->cache->flush();
     }
+
+    public function flush(?int $bag = null, ?string $group = null): void
+    {
+        if (!config('settings-manager.enable_cache')) return;
+
+        $tags = collect(['settings-manager', $bag, $group])
+            ->filter(fn ($item) => $item !== null)
+            ->toArray();
+
+        Cache::tags($tags)->flush();
+    }
 }

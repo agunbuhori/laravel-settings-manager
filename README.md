@@ -9,6 +9,7 @@ It helps you store, retrieve, and manage application settings in the database �
 - ✅ Cache support for performance  
 - ✅ Bag & group support (multi-tenant, multi-context)  
 - ✅ Bulk get (`getMany()`)  
+- ✅ Flush cache by bag/group  
 - ✅ REST API endpoints for settings management  
 
 ---
@@ -145,6 +146,21 @@ settings()->general()->set('country', 'USA', false); // won't be saved to cache
 
 ---
 
+### 9. Flush cache
+
+```php
+// Flush all settings cache
+settings()->flush();
+
+// Flush cache for a specific bag
+settings()->flush(bag: 1);
+
+// Flush cache for a specific bag and group
+settings()->flush(bag: 1, group: 'preferences');
+```
+
+---
+
 ## 💼 Bags and Groups
 
 In this settings manager, **bags** are used to define the main scope of your settings.  
@@ -177,6 +193,7 @@ GET     /settings?per_page=10&keys=site_name,is_active
 GET     /settings/{key}
 POST    /settings/{key}   (or PUT/PATCH)
 DELETE  /settings/{key}
+DELETE  /settings-cache/clear?bag=1&group=preferences
 ```
 
 Also you can conditionally authorize
@@ -209,6 +226,13 @@ POST /settings/site_name
 ```
 DELETE /settings/site_name
 → { "message": "Setting deleted successfully", "data": null }
+```
+
+### Example: Flush cache
+
+```
+DELETE /settings-cache/clear?bag=1&group=preferences
+→ { "message": "Cache cleared successfully" }
 ```
 
 ---
