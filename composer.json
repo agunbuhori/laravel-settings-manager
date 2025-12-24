@@ -5,7 +5,14 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Agunbuhori\\SettingsManager\\": "src/"
+            "Agunbuhori\\SettingsManager\\": "src/",
+            "Agunbuhori\\SettingsManager\\Controllers\\": "src/controllers/",
+            "Agunbuhori\\SettingsManager\\Database\\": "src/database/",
+            "Agunbuhori\\SettingsManager\\Interfaces\\": "src/interfaces/",
+            "Agunbuhori\\SettingsManager\\Middlewares\\": "src/middlewares/",
+            "Agunbuhori\\SettingsManager\\Routes\\": "src/routes/",
+            "Agunbuhori\\SettingsManager\\Models\\": "src/models/"
+
         },
         "files": [
             "src/helpers.php"
